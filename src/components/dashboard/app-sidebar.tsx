@@ -7,13 +7,10 @@ import {
   IconDashboard,
   IconFileAnalytics,
   IconForms,
-  IconLayoutGrid,
   IconSettings,
-  IconTemplate,
   IconUsers,
 } from "@tabler/icons-react";
 
-import { NavDocuments } from "@/components/dashboard/nav-documents";
 import { NavMain } from "@/components/dashboard/nav-main";
 import { NavSecondary } from "@/components/dashboard/nav-secondary";
 import { NavUser } from "@/components/dashboard/nav-user";
@@ -62,43 +59,6 @@ const data = {
       icon: IconUsers,
     },
   ],
-  navClouds: [
-    {
-      title: "Templates",
-      icon: IconTemplate,
-      isActive: true,
-      url: "/dashboard/templates",
-      items: [
-        {
-          title: "Meus Templates",
-          url: "/dashboard/templates/my",
-        },
-        {
-          title: "Templates Públicos",
-          url: "/dashboard/templates/public",
-        },
-        {
-          title: "Favoritos",
-          url: "/dashboard/templates/favorites",
-        },
-      ],
-    },
-    {
-      title: "Integrações",
-      icon: IconLayoutGrid,
-      url: "/dashboard/integrations",
-      items: [
-        {
-          title: "Ativas",
-          url: "/dashboard/integrations/active",
-        },
-        {
-          title: "Disponíveis",
-          url: "/dashboard/integrations/available",
-        },
-      ],
-    },
-  ],
   navSecondary: [
     {
       title: "Configurações",
@@ -106,12 +66,11 @@ const data = {
       icon: IconSettings,
     },
   ],
-  documents: [],
 };
 
 export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
   return (
-    <Sidebar collapsible="offcanvas" {...props}>
+    <Sidebar collapsible="icon" {...props}>
       <SidebarHeader>
         <SidebarMenu>
           <SidebarMenuItem>
@@ -129,7 +88,6 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
       </SidebarHeader>
       <SidebarContent>
         <NavMain items={data.navMain} />
-        {data.documents.length > 0 && <NavDocuments items={data.documents} />}
         <NavSecondary items={data.navSecondary} className="mt-auto" />
       </SidebarContent>
       <SidebarFooter>
