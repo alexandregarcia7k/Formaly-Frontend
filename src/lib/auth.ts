@@ -23,29 +23,29 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
   },
   callbacks: {
     async signIn({ user, account }) {
-      try {
-        const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/auth/sync`, {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({
-            email: user.email,
-            name: user.name,
-            image: user.image,
-            provider: account?.provider,
-            providerId: account?.providerAccountId,
-          }),
-        })
-        
-        if (!response.ok) {
-          console.error("Erro ao sincronizar com backend")
-          return false
-        }
-        
-        return true
-      } catch (error) {
-        console.error("Erro na sincronização:", error)
-        return false
-      }
+      // TODO: Descomentar quando backend estiver rodando
+      // try {
+      //   const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/auth/sync`, {
+      //     method: "POST",
+      //     headers: { "Content-Type": "application/json" },
+      //     body: JSON.stringify({
+      //       email: user.email,
+      //       name: user.name,
+      //       image: user.image,
+      //       provider: account?.provider,
+      //       providerId: account?.providerAccountId,
+      //     }),
+      //   })
+      //   
+      //   if (!response.ok) {
+      //     console.error("Erro ao sincronizar com backend")
+      //     return false
+      //   }
+      // } catch (error) {
+      //   console.error("Erro na sincronização:", error)
+      // }
+      
+      return true
     },
   },
 })

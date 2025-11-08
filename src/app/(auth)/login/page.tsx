@@ -5,7 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { ThemeSwitcher } from "@/components/theme-switcher-1";
+import { ThemeSwitcher } from "@/components/shared/theme-switcher";
 import { SocialLoginButtons } from "@/components/auth/social-login-buttons";
 import Link from "next/link";
 

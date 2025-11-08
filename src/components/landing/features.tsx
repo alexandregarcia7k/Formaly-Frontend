@@ -109,7 +109,7 @@ export default function Features() {
                     </Accordion>
 
                     <div className="relative flex items-center justify-center overflow-hidden rounded-2xl border bg-muted/30 p-4">
-                        <div className="relative aspect-[4/3] w-full overflow-hidden rounded-xl border bg-background shadow-lg">
+                        <div className="relative aspect-4/3 w-full overflow-hidden rounded-xl border bg-background shadow-lg">
                             <div
                                 key={activeItem}
                                 className="h-full w-full transition-opacity duration-300"

@@ -1,69 +1,143 @@
-"use client"
+"use client";
 
-import Link from "next/link"
-import { usePathname } from "next/navigation"
-import { LayoutDashboard, FileText, Settings } from "lucide-react"
-import { cn } from "@/lib/utils"
+import * as React from "react";
+import Link from "next/link";
+import {
+  IconChartBar,
+  IconDashboard,
+  IconFileAnalytics,
+  IconForms,
+  IconLayoutGrid,
+  IconSettings,
+  IconTemplate,
+  IconUsers,
+} from "@tabler/icons-react";
 
-const routes = [
-  {
-    label: "Dashboard",
-    icon: LayoutDashboard,
-    href: "/dashboard",
+import { NavDocuments } from "@/components/dashboard/nav-documents";
+import { NavMain } from "@/components/dashboard/nav-main";
+import { NavSecondary } from "@/components/dashboard/nav-secondary";
+import { NavUser } from "@/components/dashboard/nav-user";
+import { ThemeSwitcher } from "@/components/shared/theme-switcher";
+import {
+  Sidebar,
+  SidebarContent,
+  SidebarFooter,
+  SidebarHeader,
+  SidebarMenu,
+  SidebarMenuButton,
+  SidebarMenuItem,
+} from "@/components/ui/sidebar";
+import { Logo } from "@/components/landing/logo";
+
+const data = {
+  user: {
+    name: "Alexandre Garcia",
+    email: "alexandre@formaly.com",
+    avatar: "/avatars/user.jpg",
   },
-  {
-    label: "Formulários",
-    icon: FileText,
-    href: "/dashboard/forms",
-  },
-  {
-    label: "Configurações",
-    icon: Settings,
-    href: "/dashboard/settings",
-  },
-]
+  navMain: [
+    {
+      title: "Dashboard",
+      url: "/dashboard",
+      icon: IconDashboard,
+    },
+    {
+      title: "Meus Formulários",
+      url: "/dashboard/forms",
+      icon: IconForms,
+    },
+    {
+      title: "Analytics",
+      url: "/dashboard/analytics",
+      icon: IconChartBar,
+    },
+    {
+      title: "Respostas",
+      url: "/dashboard/responses",
+      icon: IconFileAnalytics,
+    },
+    {
+      title: "Equipe",
+      url: "/dashboard/team",
+      icon: IconUsers,
+    },
+  ],
+  navClouds: [
+    {
+      title: "Templates",
+      icon: IconTemplate,
+      isActive: true,
+      url: "/dashboard/templates",
+      items: [
+        {
+          title: "Meus Templates",
+          url: "/dashboard/templates/my",
+        },
+        {
+          title: "Templates Públicos",
+          url: "/dashboard/templates/public",
+        },
+        {
+          title: "Favoritos",
+          url: "/dashboard/templates/favorites",
+        },
+      ],
+    },
+    {
+      title: "Integrações",
+      icon: IconLayoutGrid,
+      url: "/dashboard/integrations",
+      items: [
+        {
+          title: "Ativas",
+          url: "/dashboard/integrations/active",
+        },
+        {
+          title: "Disponíveis",
+          url: "/dashboard/integrations/available",
+        },
+      ],
+    },
+  ],
+  navSecondary: [
+    {
+      title: "Configurações",
+      url: "/dashboard/settings",
+      icon: IconSettings,
+    },
+  ],
+  documents: [],
+};
 
-export function AppSidebar() {
-  const pathname = usePathname()
-
+export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
   return (
-    <aside className="w-64 border-r bg-card">
-      <div className="flex h-full flex-col">
-        {/* Logo */}
-        <div className="border-b p-6">
-          <h2 className="text-2xl font-bold">Formaly</h2>
-        </div>
-
-        {/* Navigation */}
-        <nav className="flex-1 space-y-1 p-4">
-          {routes.map((route) => (
-            <Link
-              key={route.href}
-              href={route.href}
-              className={cn(
-                "flex items-center gap-3 rounded-lg px-3 py-2 text-sm transition-colors",
-                pathname === route.href
-                  ? "bg-primary text-primary-foreground"
-                  : "text-muted-foreground hover:bg-accent hover:text-accent-foreground"
-              )}
+    <Sidebar collapsible="offcanvas" {...props}>
+      <SidebarHeader>
+        <SidebarMenu>
+          <SidebarMenuItem>
+            <SidebarMenuButton
+              asChild
+              className="data-[slot=sidebar-menu-button]:p-1.5!"
             >
-              <route.icon className="h-5 w-5" />
-              {route.label}
-            </Link>
-          ))}
-        </nav>
-
-        {/* User section */}
-        <div className="border-t p-4">
-          <div className="flex items-center gap-3">
-            <div className="h-8 w-8 rounded-full bg-primary" />
-            <div className="flex-1">
-              <p className="text-sm font-medium">Usuário</p>
-              <p className="text-xs text-muted-foreground">user@email.com</p>
-            </div>
-          </div>
+              <Link href="/dashboard" className="flex items-center gap-2">
+                <Logo className="size-6!" />
+                <span className="text-lg font-bold">Formaly</span>
+              </Link>
+            </SidebarMenuButton>
+          </SidebarMenuItem>
+        </SidebarMenu>
+      </SidebarHeader>
+      <SidebarContent>
+        <NavMain items={data.navMain} />
+        {data.documents.length > 0 && <NavDocuments items={data.documents} />}
+        <NavSecondary items={data.navSecondary} className="mt-auto" />
+      </SidebarContent>
+      <SidebarFooter>
+        <div className="px-3 py-2 flex justify-center">
+          <ThemeSwitcher />
         </div>
-      </div>
-    </aside>
-  )
+        <NavUser user={data.user} />
+      </SidebarFooter>
+    </Sidebar>
+  );
 }
