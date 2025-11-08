@@ -2,14 +2,14 @@
 
 import * as React from "react";
 import Link from "next/link";
+
+// 🎯 ATENÇÃO: Para modificar links da sidebar, edite o arquivo:
+// src/config/sidebar.config.ts
 import {
-  IconChartBar,
-  IconDashboard,
-  IconFileAnalytics,
-  IconForms,
-  IconSettings,
-  IconUsers,
-} from "@tabler/icons-react";
+  sidebarUser,
+  mainLinks,
+  secondaryLinks,
+} from "@/config/sidebar.config";
 
 import { NavMain } from "@/components/dashboard/nav-main";
 import { NavSecondary } from "@/components/dashboard/nav-secondary";
@@ -25,48 +25,6 @@ import {
   SidebarMenuItem,
 } from "@/components/ui/sidebar";
 import { Logo } from "@/components/landing/logo";
-
-const data = {
-  user: {
-    name: "Alexandre Garcia",
-    email: "alexandre@formaly.com",
-    avatar: "/avatars/user.jpg",
-  },
-  navMain: [
-    {
-      title: "Dashboard",
-      url: "/dashboard",
-      icon: IconDashboard,
-    },
-    {
-      title: "Meus Formulários",
-      url: "/dashboard/forms",
-      icon: IconForms,
-    },
-    {
-      title: "Analytics",
-      url: "/dashboard/analytics",
-      icon: IconChartBar,
-    },
-    {
-      title: "Respostas",
-      url: "/dashboard/responses",
-      icon: IconFileAnalytics,
-    },
-    {
-      title: "Equipe",
-      url: "/dashboard/team",
-      icon: IconUsers,
-    },
-  ],
-  navSecondary: [
-    {
-      title: "Configurações",
-      url: "/dashboard/settings",
-      icon: IconSettings,
-    },
-  ],
-};
 
 export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
   return (
@@ -87,14 +45,19 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
         </SidebarMenu>
       </SidebarHeader>
       <SidebarContent>
-        <NavMain items={data.navMain} />
-        <NavSecondary items={data.navSecondary} className="mt-auto" />
+        {/* 📍 LINKS PRINCIPAIS - Configurados em sidebar.config.ts */}
+        <NavMain items={mainLinks} />
+
+        {/* 📍 LINKS SECUNDÁRIOS - Configurados em sidebar.config.ts */}
+        <NavSecondary items={secondaryLinks} className="mt-auto" />
       </SidebarContent>
       <SidebarFooter>
         <div className="px-3 py-2 flex justify-center">
           <ThemeSwitcher />
         </div>
-        <NavUser user={data.user} />
+
+        {/* 📍 DADOS DO USUÁRIO - Configurados em sidebar.config.ts */}
+        <NavUser user={sidebarUser} />
       </SidebarFooter>
     </Sidebar>
   );
