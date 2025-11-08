@@ -9,17 +9,17 @@ const routes = [
   {
     label: "Dashboard",
     icon: LayoutDashboard,
-    href: "/",
+    href: "/dashboard",
   },
   {
     label: "Formulários",
     icon: FileText,
-    href: "/forms",
+    href: "/dashboard/forms",
   },
   {
     label: "Configurações",
     icon: Settings,
-    href: "/settings",
+    href: "/dashboard/settings",
   },
 ]
 

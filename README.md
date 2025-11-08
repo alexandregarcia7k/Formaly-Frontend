@@ -18,15 +18,11 @@ Plataforma de criação e gerenciamento de formulários online com Next.js 16.
 ```
 src/
 ├── app/
-│   ├── (public)/          # Landing page (rota: /)
-│   │   ├── layout.tsx     # Layout público
-│   │   └── page.tsx       # Página inicial
-│   │
 │   ├── (auth)/            # Autenticação
 │   │   └── login/         # Página de login
 │   │       └── page.tsx
 │   │
-│   ├── (dashboard)/       # Área autenticada
+│   ├── dashboard/         # Área autenticada (rota: /dashboard)
 │   │   ├── layout.tsx     # Layout com sidebar fixa
 │   │   ├── page.tsx       # Dashboard principal
 │   │   ├── forms/         # Gerenciamento de formulários
@@ -39,7 +35,7 @@ src/
 │   │
 │   ├── layout.tsx         # Root layout
 │   ├── globals.css        # Estilos globais
-│   └── page.tsx           # Redirect para landing
+│   └── page.tsx           # Landing page (rota: /)
 │
 ├── components/
 │   ├── ui/                # Shadcn components
@@ -79,24 +75,30 @@ src/
 
 ## 🏗️ Arquitetura Next.js 16
 
+### Rotas
+
+- `/` → Landing page (pública)
+- `/login` → Página de login
+- `/dashboard` → Dashboard principal (autenticado)
+- `/dashboard/forms` → Gerenciamento de formulários
+- `/dashboard/settings` → Configurações
+
 ### Route Groups
-Usamos **route groups** `(nome)` para organizar rotas sem afetar a URL:
+Usamos **route groups** `(nome)` apenas para autenticação:
 
-- `(public)` → Rotas públicas (landing page)
-- `(auth)` → Rotas de autenticação
-- `(dashboard)` → Rotas autenticadas
+- `(auth)` → Agrupa rotas de autenticação sem afetar a URL
 
-**Exemplo**: `app/(dashboard)/forms/page.tsx` → URL: `/forms`
+**Exemplo**: `app/(auth)/login/page.tsx` → URL: `/login`
 
 ### Layouts Aninhados
 Layouts são compartilhados entre rotas e **preservam estado** durante navegação:
 
 ```
 app/layout.tsx                    # Root layout (global)
-  └── (dashboard)/layout.tsx      # Dashboard layout (sidebar fixa)
-      ├── page.tsx                # /
-      ├── forms/page.tsx          # /forms
-      └── settings/page.tsx       # /settings
+  └── dashboard/layout.tsx      # Dashboard layout (sidebar fixa)
+      ├── page.tsx                # /dashboard
+      ├── forms/page.tsx          # /dashboard/forms
+      └── settings/page.tsx       # /dashboard/settings
 ```
 
 **Benefício**: A sidebar permanece montada ao navegar entre páginas do dashboard.
