@@ -14,7 +14,7 @@ import {
 import { NavMain } from "@/components/dashboard/nav-main";
 import { NavSecondary } from "@/components/dashboard/nav-secondary";
 import { NavUser } from "@/components/dashboard/nav-user";
-import { ThemeSwitcher } from "@/components/shared/theme-switcher";
+import { SidebarThemeSwitcher } from "@/components/dashboard/sidebar-theme-switcher";
 import {
   Sidebar,
   SidebarContent,
@@ -53,7 +53,7 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
       </SidebarContent>
       <SidebarFooter>
         <div className="px-3 py-2 flex justify-center">
-          <ThemeSwitcher />
+          <SidebarThemeSwitcher />
         </div>
 
         {/* 📍 DADOS DO USUÁRIO - Configurados em sidebar.config.ts */}

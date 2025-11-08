@@ -1,5 +1,11 @@
-export const SystemIcon = () => (
-  <svg height="16" strokeLinejoin="round" viewBox="0 0 16 16" width="16">
+export const SystemIcon = ({ className }: { className?: string }) => (
+  <svg
+    height="16"
+    strokeLinejoin="round"
+    viewBox="0 0 16 16"
+    width="16"
+    className={className}
+  >
     <path
       fillRule="evenodd"
       clipRule="evenodd"
@@ -9,8 +15,14 @@ export const SystemIcon = () => (
   </svg>
 );
 
-export const LightIcon = () => (
-  <svg height="16" strokeLinejoin="round" viewBox="0 0 16 16" width="16">
+export const LightIcon = ({ className }: { className?: string }) => (
+  <svg
+    height="16"
+    strokeLinejoin="round"
+    viewBox="0 0 16 16"
+    width="16"
+    className={className}
+  >
     <path
       fillRule="evenodd"
       clipRule="evenodd"
@@ -20,8 +32,14 @@ export const LightIcon = () => (
   </svg>
 );
 
-export const DarkIcon = () => (
-  <svg height="16" strokeLinejoin="round" viewBox="0 0 16 16" width="16">
+export const DarkIcon = ({ className }: { className?: string }) => (
+  <svg
+    height="16"
+    strokeLinejoin="round"
+    viewBox="0 0 16 16"
+    width="16"
+    className={className}
+  >
     <path
       fillRule="evenodd"
       clipRule="evenodd"

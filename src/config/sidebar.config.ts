@@ -18,7 +18,6 @@ import {
   IconCloudDataConnection,
   IconUsers,
   IconFileText,
-  IconSearch,
   IconSettings,
   IconHelp,
 } from "@tabler/icons-react";
@@ -42,7 +41,7 @@ export const mainLinks = [
     icon: IconLayoutDashboard,
   },
   {
-    title: "Formulários",
+    title: "Criar formulários",
     url: "/dashboard/forms",
     icon: IconForms,
   },
@@ -78,17 +77,12 @@ export const secondaryLinks = [
     icon: IconFileText,
   },
   {
-    title: "Search",
-    url: "/dashboard/search",
-    icon: IconSearch,
-  },
-  {
-    title: "Settings",
+    title: "Configurações",
     url: "/dashboard/settings",
     icon: IconSettings,
   },
   {
-    title: "Help",
+    title: "Ajuda",
     url: "/help",
     icon: IconHelp,
   },
