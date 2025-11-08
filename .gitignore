@@ -23,11 +23,8 @@ dist
 
 # Environment variables
 .env
-.env.local
-.env.development.local
-.env.test.local
-.env.production.local
-.env*.local
+.env.*
+!.env.example
 *.env
 !.env.example
 
@@ -49,7 +46,9 @@ lerna-debug.log*
 next-env.d.ts
 
 # IDEs and Editors
-.vscode/
+.vscode/*
+!.vscode/settings.json
+!.vscode/tailwind.json
 .idea/
 .fleet/
 .project
@@ -76,17 +75,18 @@ desktop.ini
 # GitHub specific
 .github/
 
-# AmazonQ
+# AI Assistants
 .amazonq/
+.copilot/
+.cursor/
+.codeium/
 
-# Any hidden folders (folders starting with .)
-.*
-!.gitignore
-!.env.example
+# MCP Config (contém API keys)
+mcp.json
+.mcp.json
 
-# Markdown files (except README)
-*.md
-!README.md
+# Context folder
+contexto/
 
 # Logs
 logs
