@@ -36,7 +36,7 @@ export const FIELD_TYPES: FieldTypeConfig[] = [
   {
     type: "text",
     label: "Texto",
-    description: "Campo de texto simples",
+    description: "Campo de texto personalizados",
     icon: Type,
   },
   {

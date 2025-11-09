@@ -10,7 +10,7 @@ import {
   EyeOff,
   Hammer,
   Monitor,
-  BarChart3,
+  Settings,
   Trash2,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
@@ -21,14 +21,14 @@ interface FormBuilderHeaderProps {
   formPassword: string;
   showPassword: boolean;
   formLink: string;
-  activeTab: "builder" | "preview" | "responses";
+  activeTab: "builder" | "preview" | "settings";
   onFormNameChange: (value: string) => void;
   onFormDescriptionChange: (value: string) => void;
   onFormPasswordChange: (value: string) => void;
   onShowPasswordToggle: () => void;
   onClearPassword: () => void;
   onCopyLink: () => void;
-  onTabChange: (tab: "builder" | "preview" | "responses") => void;
+  onTabChange: (tab: "builder" | "preview" | "settings") => void;
   onBack: () => void;
   onCancel: () => void;
   onSave: () => void;
@@ -202,16 +202,16 @@ export function FormBuilderHeader({
             Preview
           </button>
           <button
-            onClick={() => onTabChange("responses")}
+            onClick={() => onTabChange("settings")}
             className={cn(
               "inline-flex items-center gap-2 px-4 py-2 rounded-md text-sm font-medium transition-all",
-              activeTab === "responses"
+              activeTab === "settings"
                 ? "bg-background shadow-sm text-foreground"
                 : "text-muted-foreground hover:text-foreground"
             )}
           >
-            <BarChart3 className="h-4 w-4" />
-            Respostas
+            <Settings className="h-4 w-4" />
+            Configurações
           </button>
         </div>
       </div>

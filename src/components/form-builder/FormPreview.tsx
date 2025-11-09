@@ -52,6 +52,7 @@ export function FormPreview({
       formData={formData}
       onFieldChange={handleFieldChange}
       onSubmit={handleSubmit}
+      showPreviewHeader={true}
     />
   );
 }

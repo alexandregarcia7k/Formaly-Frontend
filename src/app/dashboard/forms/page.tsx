@@ -2,256 +2,300 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
-import { Hammer } from "lucide-react";
-import { cn } from "@/lib/utils";
 import {
-  FormBuilderHeader,
-  FormFieldTypes,
-  FormFieldEditor,
-  FormPreview,
-  FIELD_TYPES,
-  createNewField,
-  type FormField,
-  type FieldType,
-} from "@/components/form-builder";
-import { useDragAndDrop } from "@/hooks/useDragAndDrop";
-import { FormsService } from "@/lib/services/forms.service";
+  Plus,
+  MoreVertical,
+  Eye,
+  Edit,
+  Copy,
+  Trash2,
+  Lock,
+  Power,
+  PowerOff,
+} from "lucide-react";
+import { Button } from "@/components/ui/button";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table";
+import { Badge } from "@/components/ui/badge";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
+import { Switch } from "@/components/ui/switch";
+import { FormPreview } from "@/components/form-builder/FormPreview";
+import { FormField } from "@/components/form-builder/FormFieldEditor";
+
+const mockForms = [
+  {
+    id: "1",
+    name: "Cadastro de Clientes",
+    description: "Formulário para novos clientes",
+    status: "ACTIVE",
+    submissions: 342,
+    views: 1250,
+    createdAt: new Date("2024-01-15"),
+    updatedAt: new Date("2024-03-20T14:30:00"),
+    hasPassword: true,
+    expiresAt: null,
+    maxResponses: null,
+    allowMultipleSubmissions: true,
+    successMessage: "Obrigado por se cadastrar!",
+    fields: [
+      {
+        id: "field-1",
+        type: "text" as const,
+        label: "Nome Completo",
+        placeholder: "Digite seu nome",
+        required: true,
+      },
+      {
+        id: "field-2",
+        type: "email" as const,
+        label: "E-mail",
+        placeholder: "seu@email.com",
+        required: true,
+      },
+      {
+        id: "field-3",
+        type: "phone" as const,
+        label: "Telefone",
+        placeholder: "(00) 00000-0000",
+        required: false,
+      },
+      {
+        id: "field-4",
+        type: "select" as const,
+        label: "Como nos conheceu?",
+        placeholder: "Selecione uma opção",
+        required: true,
+        options: ["Google", "Redes Sociais", "Indicação", "Outro"],
+      },
+    ] as FormField[],
+  },
+];
+
+function formatDate(date: Date): string {
+  return date.toLocaleDateString("pt-BR");
+}
+
+function formatDateTime(date: Date): string {
+  return date.toLocaleString("pt-BR", {
+    day: "2-digit",
+    month: "2-digit",
+    year: "numeric",
+    hour: "2-digit",
+    minute: "2-digit",
+  });
+}
 
 export default function FormsPage() {
   const router = useRouter();
-  const [formName, setFormName] = useState("");
-  const [formDescription, setFormDescription] = useState("");
-  const [formPassword, setFormPassword] = useState("");
-  const [showPassword, setShowPassword] = useState(false);
-  const [selectedFields, setSelectedFields] = useState<FormField[]>([]);
-  const [activeTab, setActiveTab] = useState<
-    "builder" | "preview" | "responses"
-  >("builder");
-  const [isLoading, setIsLoading] = useState(false);
+  const [previewFormId, setPreviewFormId] = useState<string | null>(null);
+  const [forms, setForms] = useState(mockForms);
 
-  // Hook customizado para drag-and-drop
-  const {
-    draggedIndex,
-    dragOverIndex,
-    draggedFieldType,
-    handleDragStart,
-    handleDragOver,
-    handleDragEnd,
-    handleFieldTypeDragStart,
-    handleFieldTypeDragOver,
-    handleFieldTypeDrop,
-    handleCanvasDragOver,
-    handleCanvasDrop,
-  } = useDragAndDrop(selectedFields, setSelectedFields);
+  const previewForm = forms.find((f) => f.id === previewFormId);
 
-  // Link público (será retornado pelo backend após salvar)
-  const [formLink, setFormLink] = useState("");
-
-  const handleCopyLink = async () => {
-    if (!formLink) return;
-
-    try {
-      await navigator.clipboard.writeText(formLink);
-      // TODO: Adicionar toast de sucesso
-    } catch (error) {
-      console.error("Erro ao copiar link:", error);
-      // TODO: Adicionar toast de erro
-    }
-  };
-
-  const addField = (type: FieldType) => {
-    const newField = createNewField(type);
-    setSelectedFields([...selectedFields, newField]);
-  };
-
-  const removeField = (id: string) => {
-    setSelectedFields(selectedFields.filter((f) => f.id !== id));
-  };
-
-  const updateField = (id: string, updates: Partial<FormField>) => {
-    setSelectedFields(
-      selectedFields.map((f) => (f.id === id ? { ...f, ...updates } : f))
+  const toggleFormStatus = (formId: string) => {
+    setForms((prevForms) =>
+      prevForms.map((form) =>
+        form.id === formId
+          ? {
+              ...form,
+              status: form.status === "ACTIVE" ? "INACTIVE" : "ACTIVE",
+            }
+          : form
+      )
     );
   };
 
-  const handleCancel = () => {
-    router.push("/dashboard");
-  };
-
-  const handleSave = async () => {
-    if (!formName.trim()) {
-      // TODO: Adicionar toast de validação
-      console.warn("Nome do formulário é obrigatório");
-      return;
-    }
-
-    setIsLoading(true);
-
-    try {
-      // Enviar dados para API NestJS/Fastify
-      const response = await FormsService.createForm({
-        name: formName,
-        description: formDescription || undefined,
-        password: formPassword || undefined,
-        fields: selectedFields,
-      });
-
-      // Backend retorna o link público gerado
-      setFormLink(response.publicLink);
-
-      console.log("✅ Formulário criado com sucesso:", response);
-
-      // TODO: Adicionar toast de sucesso
-      // TODO: Redirecionar ou mostrar modal com link
-    } catch (error) {
-      console.error("❌ Erro ao criar formulário:", error);
-      // TODO: Adicionar toast de erro
-    } finally {
-      setIsLoading(false);
-    }
-  };
-
   return (
-    <div className="min-h-screen flex flex-col bg-background">
-      <FormBuilderHeader
-        formName={formName}
-        formDescription={formDescription}
-        formPassword={formPassword}
-        showPassword={showPassword}
-        formLink={formLink}
-        activeTab={activeTab}
-        onFormNameChange={setFormName}
-        onFormDescriptionChange={setFormDescription}
-        onFormPasswordChange={setFormPassword}
-        onShowPasswordToggle={() => setShowPassword(!showPassword)}
-        onClearPassword={() => setFormPassword("")}
-        onCopyLink={handleCopyLink}
-        onTabChange={setActiveTab}
-        onBack={() => router.back()}
-        onCancel={handleCancel}
-        onSave={handleSave}
-        isLoading={isLoading}
-      />
-
-      {/* Conteúdo */}
-      <div className="flex-1">
-        {activeTab === "builder" && (
-          <div className="flex">
-            <FormFieldTypes
-              fieldTypes={FIELD_TYPES}
-              onFieldTypeClick={addField}
-              onFieldTypeDragStart={handleFieldTypeDragStart}
-            />
-
-            {/* Área de construção */}
-            <div
-              className="flex-1"
-              onDragOver={handleCanvasDragOver}
-              onDrop={handleCanvasDrop}
-            >
-              <div className="max-w-3xl mx-auto p-6">
-                <div className="mb-6">
-                  <h2 className="text-lg font-semibold mb-1">
-                    Campos do Formulário ({selectedFields.length})
-                  </h2>
-                  <p className="text-sm text-muted-foreground">
-                    Arraste um tipo de campo ou clique para adicionar
-                  </p>
-                </div>
-
-                {selectedFields.length === 0 ? (
-                  <div className="flex items-center justify-center h-96 border-2 border-dashed rounded-lg">
-                    <div className="text-center">
-                      <Hammer className="h-12 w-12 mx-auto text-muted-foreground mb-4" />
-                      <h3 className="font-semibold mb-2">
-                        Comece a construir seu formulário
-                      </h3>
-                      <p className="text-sm text-muted-foreground">
-                        Arraste um tipo de campo ou clique para adicionar
-                      </p>
-                    </div>
-                  </div>
-                ) : (
-                  <div className="space-y-3">
-                    {selectedFields.map((field, index) => (
-                      <div key={field.id}>
-                        {/* Drop zone antes do campo */}
-                        {draggedFieldType && (
-                          <div
-                            onDragOver={(e) =>
-                              handleFieldTypeDragOver(e, index)
-                            }
-                            onDrop={(e) => handleFieldTypeDrop(e, index)}
-                            className={cn(
-                              "transition-all duration-200 rounded",
-                              dragOverIndex === index
-                                ? "bg-primary/20 h-12 border-2 border-dashed border-primary"
-                                : "h-2"
-                            )}
-                          />
-                        )}
-                        <FormFieldEditor
-                          field={field}
-                          fieldTypes={FIELD_TYPES}
-                          isDragging={draggedIndex === index}
-                          isDragOver={
-                            dragOverIndex === index &&
-                            draggedIndex !== index &&
-                            !draggedFieldType
-                          }
-                          onUpdate={(updates) => updateField(field.id, updates)}
-                          onRemove={() => removeField(field.id)}
-                          onDragStart={() => handleDragStart(index)}
-                          onDragOver={(e: React.DragEvent) =>
-                            handleDragOver(e, index)
-                          }
-                          onDragEnd={handleDragEnd}
-                        />
-                      </div>
-                    ))}
-                    {/* Drop zone no final */}
-                    {draggedFieldType && (
-                      <div
-                        onDragOver={(e) =>
-                          handleFieldTypeDragOver(e, selectedFields.length)
-                        }
-                        onDrop={(e) =>
-                          handleFieldTypeDrop(e, selectedFields.length)
-                        }
-                        className={cn(
-                          "transition-all duration-200 rounded",
-                          dragOverIndex === selectedFields.length
-                            ? "bg-primary/20 h-12 border-2 border-dashed border-primary"
-                            : "h-2"
-                        )}
-                      />
-                    )}
-                  </div>
-                )}
-              </div>
-            </div>
-          </div>
-        )}
-
-        {activeTab === "preview" && (
-          <div className="h-full overflow-y-auto">
-            <FormPreview
-              formName={formName}
-              formDescription={formDescription}
-              fields={selectedFields}
-              hasPassword={formPassword.length > 0}
-            />
-          </div>
-        )}
-
-        {activeTab === "responses" && (
-          <div className="h-full overflow-y-auto p-6">
-            <div className="max-w-4xl mx-auto">
-              <p className="text-muted-foreground">Respostas recebidas...</p>
-            </div>
-          </div>
-        )}
+    <div className="flex flex-col gap-6">
+      <div className="flex items-center justify-between">
+        <div>
+          <h1 className="text-3xl font-bold tracking-tight">Formulários</h1>
+          <p className="text-muted-foreground">
+            Gerencie e acompanhe seus formulários
+          </p>
+        </div>
+        <Button onClick={() => router.push("/dashboard/forms/new")}>
+          <Plus className="mr-2 h-4 w-4" />
+          Novo Formulário
+        </Button>
       </div>
+
+      <Card>
+        <CardHeader>
+          <CardTitle>Seus Formulários</CardTitle>
+          <CardDescription>
+            Lista completa de todos os formulários criados
+          </CardDescription>
+        </CardHeader>
+        <CardContent>
+          <Table>
+            <TableHeader>
+              <TableRow>
+                <TableHead>Formulário</TableHead>
+                <TableHead>Status</TableHead>
+                <TableHead>Respostas</TableHead>
+                <TableHead>Views</TableHead>
+                <TableHead>Taxa</TableHead>
+                <TableHead>Criado em</TableHead>
+                <TableHead>Atualizado em</TableHead>
+                <TableHead className="text-right">Ações</TableHead>
+              </TableRow>
+            </TableHeader>
+            <TableBody>
+              {forms.map((form) => (
+                <TableRow key={form.id}>
+                  <TableCell>
+                    <div className="flex flex-col gap-1">
+                      <div className="flex items-center gap-2">
+                        <span className="font-medium">{form.name}</span>
+                        {form.hasPassword && (
+                          <Lock className="h-3 w-3 text-muted-foreground" />
+                        )}
+                      </div>
+                      <span className="text-xs text-muted-foreground">
+                        {form.description}
+                      </span>
+                    </div>
+                  </TableCell>
+                  <TableCell>
+                    <div className="flex items-center gap-3">
+                      <Switch
+                        checked={form.status === "ACTIVE"}
+                        onCheckedChange={() => toggleFormStatus(form.id)}
+                        className="data-[state=checked]:bg-green-500"
+                      />
+                      <div className="flex items-center gap-2">
+                        {form.status === "ACTIVE" ? (
+                          <Power className="h-4 w-4 text-green-500" />
+                        ) : (
+                          <PowerOff className="h-4 w-4 text-muted-foreground" />
+                        )}
+                        <Badge
+                          variant={
+                            form.status === "ACTIVE" ? "default" : "secondary"
+                          }
+                          className={
+                            form.status === "ACTIVE"
+                              ? "bg-green-500 hover:bg-green-600"
+                              : ""
+                          }
+                        >
+                          {form.status === "ACTIVE" ? "Ativo" : "Inativo"}
+                        </Badge>
+                      </div>
+                    </div>
+                  </TableCell>
+                  <TableCell>
+                    <span className="font-medium">{form.submissions}</span>
+                  </TableCell>
+                  <TableCell>
+                    <span className="text-muted-foreground">{form.views}</span>
+                  </TableCell>
+                  <TableCell>
+                    <span className="font-medium">
+                      {((form.submissions / form.views) * 100).toFixed(1)}%
+                    </span>
+                  </TableCell>
+                  <TableCell>
+                    <span className="text-sm text-muted-foreground">
+                      {formatDate(form.createdAt)}
+                    </span>
+                  </TableCell>
+                  <TableCell>
+                    <span className="text-sm text-muted-foreground">
+                      {formatDateTime(form.updatedAt)}
+                    </span>
+                  </TableCell>
+                  <TableCell className="text-right">
+                    <DropdownMenu>
+                      <DropdownMenuTrigger asChild>
+                        <Button variant="ghost" size="icon">
+                          <MoreVertical className="h-4 w-4" />
+                        </Button>
+                      </DropdownMenuTrigger>
+                      <DropdownMenuContent align="end">
+                        <DropdownMenuItem
+                          onClick={() =>
+                            router.push(`/dashboard/forms/${form.id}/edit`)
+                          }
+                        >
+                          <Edit className="mr-2 h-4 w-4" />
+                          Editar
+                        </DropdownMenuItem>
+                        <DropdownMenuItem
+                          onClick={() => setPreviewFormId(form.id)}
+                        >
+                          <Eye className="mr-2 h-4 w-4" />
+                          Visualizar
+                        </DropdownMenuItem>
+                        <DropdownMenuSeparator />
+                        <DropdownMenuItem
+                          onClick={() => console.log("Clonar", form.id)}
+                        >
+                          <Copy className="mr-2 h-4 w-4" />
+                          Duplicar
+                        </DropdownMenuItem>
+                        <DropdownMenuItem
+                          onClick={() => console.log("Deletar", form.id)}
+                          className="text-destructive"
+                        >
+                          <Trash2 className="mr-2 h-4 w-4" />
+                          Deletar
+                        </DropdownMenuItem>
+                      </DropdownMenuContent>
+                    </DropdownMenu>
+                  </TableCell>
+                </TableRow>
+              ))}
+            </TableBody>
+          </Table>
+        </CardContent>
+      </Card>
+
+      {/* Modal de Preview */}
+      <Dialog
+        open={!!previewFormId}
+        onOpenChange={(open) => !open && setPreviewFormId(null)}
+      >
+        <DialogContent className="max-w-3xl max-h-[90vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle>Preview do Formulário</DialogTitle>
+          </DialogHeader>
+          {previewForm && (
+            <FormPreview
+              formName={previewForm.name}
+              formDescription={previewForm.description}
+              fields={previewForm.fields}
+              hasPassword={previewForm.hasPassword}
+            />
+          )}
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }

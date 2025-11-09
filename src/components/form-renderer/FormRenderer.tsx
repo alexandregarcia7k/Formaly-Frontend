@@ -1,5 +1,6 @@
 "use client";
 
+import { Eye } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
   Card,
@@ -22,6 +23,7 @@ interface FormRendererProps {
   onSubmit: (data: Record<string, any>) => void;
   submitLabel?: string;
   isSubmitting?: boolean;
+  showPreviewHeader?: boolean;
 }
 
 export function FormRenderer({
@@ -33,6 +35,7 @@ export function FormRenderer({
   onSubmit,
   submitLabel = "Enviar Formulário",
   isSubmitting = false,
+  showPreviewHeader = false,
 }: FormRendererProps) {
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -40,17 +43,35 @@ export function FormRenderer({
   };
 
   return (
-    <div className="h-full overflow-y-auto p-6 bg-muted/20">
-      <div className="max-w-2xl mx-auto">
+    <div className="h-full overflow-y-auto p-6 bg-muted/30">
+      <div className="max-w-3xl mx-auto">
         <Card>
-          <CardHeader>
-            <CardTitle className="text-2xl">
-              {formName || "Seu Formulário"}
-            </CardTitle>
-            {formDescription && (
-              <CardDescription className="text-base">
-                {formDescription}
-              </CardDescription>
+          <CardHeader className="text-center space-y-4">
+            {showPreviewHeader ? (
+              <div className="space-y-3">
+                <div className="inline-flex items-center justify-center w-14 h-14 rounded-full bg-primary/10">
+                  <Eye className="w-7 h-7 text-primary" />
+                </div>
+                <div className="space-y-1">
+                  <h2 className="text-xl font-bold text-foreground">
+                    Visualização do Formulário
+                  </h2>
+                  <p className="text-sm text-muted-foreground">
+                    Veja como seu formulário aparecerá para os usuários
+                  </p>
+                </div>
+              </div>
+            ) : (
+              <>
+                <CardTitle className="text-2xl">
+                  {formName || "Seu Formulário"}
+                </CardTitle>
+                {formDescription && (
+                  <CardDescription className="text-base">
+                    {formDescription}
+                  </CardDescription>
+                )}
+              </>
             )}
           </CardHeader>
           <CardContent>

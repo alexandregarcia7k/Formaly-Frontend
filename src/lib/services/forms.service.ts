@@ -8,6 +8,11 @@ export interface CreateFormDTO {
   description?: string;
   password?: string;
   fields: FormField[];
+  // Configurações avançadas
+  expiresAt?: Date;
+  maxResponses?: number;
+  allowMultipleSubmissions?: boolean;
+  successMessage?: string;
 }
 
 export interface FormResponse {
@@ -18,6 +23,12 @@ export interface FormResponse {
   fields: FormField[];
   createdAt: string;
   updatedAt: string;
+  // Configurações avançadas
+  password?: string;
+  expiresAt?: string | null;
+  maxResponses?: number | null;
+  allowMultipleSubmissions?: boolean;
+  successMessage?: string;
 }
 
 /**
