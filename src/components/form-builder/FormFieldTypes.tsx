@@ -11,6 +11,7 @@ import {
   CheckCheck,
   Calendar,
   Hash,
+  FileUp,
 } from "lucide-react";
 
 export type FieldType =
@@ -22,7 +23,8 @@ export type FieldType =
   | "radio"
   | "checkbox"
   | "date"
-  | "number";
+  | "number"
+  | "file";
 
 export interface FieldTypeConfig {
   type: FieldType;
@@ -86,6 +88,12 @@ export const FIELD_TYPES: FieldTypeConfig[] = [
     label: "Data",
     description: "Seletor de data",
     icon: Calendar,
+  },
+  {
+    type: "file",
+    label: "Upload de Arquivo",
+    description: "Envio de arquivos",
+    icon: FileUp,
   },
 ];
 

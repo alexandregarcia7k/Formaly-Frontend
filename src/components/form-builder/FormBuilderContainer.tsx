@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
+import { toast } from "sonner";
 import {
   FormBuilderHeader,
   FormFieldTypes,
@@ -67,9 +68,6 @@ export function FormBuilderContainer({
   );
   const [isActive, setIsActive] = useState(initialData?.isActive ?? true);
 
-  // Link público (será retornado pelo backend após salvar)
-  const [formLink, setFormLink] = useState("");
-
   // Atualizar estado quando initialData mudar (para modo de edição)
   useEffect(() => {
     if (initialData) {
@@ -93,18 +91,6 @@ export function FormBuilderContainer({
     handleCanvasDrop,
   } = useDragAndDrop(selectedFields, setSelectedFields);
 
-  const handleCopyLink = async () => {
-    if (!formLink) return;
-
-    try {
-      await navigator.clipboard.writeText(formLink);
-      // TODO: Adicionar toast de sucesso
-    } catch (error) {
-      console.error("Erro ao copiar link:", error);
-      // TODO: Adicionar toast de erro
-    }
-  };
-
   const addField = (type: FieldType) => {
     const newField = createNewField(type);
     setSelectedFields([...selectedFields, newField]);
@@ -126,8 +112,7 @@ export function FormBuilderContainer({
 
   const handleSave = async () => {
     if (!formName.trim()) {
-      // TODO: Adicionar toast de validação
-      console.warn("Nome do formulário é obrigatório");
+      toast.error("O nome do formulário é obrigatório");
       return;
     }
 
@@ -136,51 +121,35 @@ export function FormBuilderContainer({
     try {
       if (mode === "edit" && initialData?.id) {
         // Atualizar formulário existente
-        const response = await FormsService.updateForm(initialData.id, {
+        await FormsService.updateForm(initialData.id, {
           name: formName,
-          description: formDescription || undefined,
-          password: formPassword || undefined,
-          fields: selectedFields,
-          // Configurações avançadas
+          description: formDescription,
+          password: formPassword,
+          fields: FormsService.mapFieldsToBackend(selectedFields),
           expiresAt: expiresAt || undefined,
           maxResponses: maxResponses || undefined,
           allowMultipleSubmissions,
-          successMessage: successMessage || undefined,
+          successMessage: successMessage,
         });
-
-        console.log("✅ Formulário atualizado com sucesso:", response);
-
-        // TODO: Adicionar toast de sucesso
-        // Redirecionar para lista de formulários
+        toast.success("Formulário atualizado com sucesso");
         router.push("/dashboard/forms");
       } else {
         // Criar novo formulário
-        const response = await FormsService.createForm({
+        await FormsService.createForm({
           name: formName,
-          description: formDescription || undefined,
-          password: formPassword || undefined,
-          fields: selectedFields,
-          // Configurações avançadas
+          description: formDescription,
+          password: formPassword,
+          fields: FormsService.mapFieldsToBackend(selectedFields),
           expiresAt: expiresAt || undefined,
           maxResponses: maxResponses || undefined,
           allowMultipleSubmissions,
-          successMessage: successMessage || undefined,
+          successMessage: successMessage,
         });
-
-        // Backend retorna o link público gerado
-        setFormLink(response.publicLink);
-
-        console.log("✅ Formulário criado com sucesso:", response);
-
-        // TODO: Adicionar toast de sucesso
-        // TODO: Redirecionar ou mostrar modal com link
+        toast.success("Formulário criado com sucesso");
+        router.push("/dashboard/forms");
       }
     } catch (error) {
-      console.error(
-        `❌ Erro ao ${mode === "edit" ? "atualizar" : "criar"} formulário:`,
-        error
-      );
-      // TODO: Adicionar toast de erro
+      toast.error("Erro ao salvar formulário. Tente novamente.");
     } finally {
       setIsLoading(false);
     }
@@ -193,14 +162,18 @@ export function FormBuilderContainer({
         formDescription={formDescription}
         formPassword={formPassword}
         showPassword={showPassword}
-        formLink={formLink}
+        formLink={initialData?.id ? `${typeof window !== 'undefined' ? window.location.origin : ''}/f/${initialData.id}` : ""}
         activeTab={activeTab}
         onFormNameChange={setFormName}
         onFormDescriptionChange={setFormDescription}
         onFormPasswordChange={setFormPassword}
         onShowPasswordToggle={() => setShowPassword(!showPassword)}
         onClearPassword={() => setFormPassword("")}
-        onCopyLink={handleCopyLink}
+        onCopyLink={() => {
+          if (initialData?.id) {
+            navigator.clipboard.writeText(`${window.location.origin}/f/${initialData.id}`);
+          }
+        }}
         onTabChange={setActiveTab}
         onBack={() => router.back()}
         onCancel={handleCancel}

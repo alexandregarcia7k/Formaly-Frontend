@@ -21,9 +21,8 @@ export function FormPreview({
   const [formData, setFormData] = useState<Record<string, any>>({});
   const [showPasswordPrompt, setShowPasswordPrompt] = useState(hasPassword);
 
-  const handlePasswordSubmit = (password: string) => {
+  const handlePasswordSubmit = () => {
     // TODO: Validar senha com backend
-    console.log("🔐 Preview - Tentativa de acesso com senha:", password);
     setShowPasswordPrompt(false);
   };
 
@@ -34,10 +33,9 @@ export function FormPreview({
     }));
   }, []);
 
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const handleSubmit = (data: Record<string, any>) => {
-    console.log("📋 Preview - Dados do formulário:", data);
-    alert("Preview: Formulário enviado! Veja o console para os dados.");
+  const handleSubmit = () => {
+    // TODO: Implementar envio real do formulário
+    alert("Preview: Formulário enviado!");
   };
 
   if (showPasswordPrompt) {

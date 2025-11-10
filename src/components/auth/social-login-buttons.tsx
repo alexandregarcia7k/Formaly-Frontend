@@ -1,9 +1,15 @@
 "use client";
 
 import { Button } from "@/components/ui/button";
-import { signIn } from "next-auth/react";
+import { useRouter } from "next/navigation";
 
 export function SocialLoginButtons() {
+  const router = useRouter();
+
+  const handleSocialLogin = () => {
+    router.push("/dashboard");
+  };
+
   return (
     <div className="space-y-4">
       <p className="text-center text-sm text-muted-foreground">Continuar com</p>
@@ -14,7 +20,7 @@ export function SocialLoginButtons() {
           variant="outline"
           className="h-16 w-full p-0"
           aria-label="Continuar com Google"
-          onClick={() => signIn("google", { callbackUrl: "/dashboard" })}
+          onClick={handleSocialLogin}
         >
           <svg
             xmlns="http://www.w3.org/2000/svg"
@@ -48,7 +54,7 @@ export function SocialLoginButtons() {
           variant="outline"
           className="h-16 w-full p-0"
           aria-label="Continuar com GitHub"
-          onClick={() => signIn("github", { callbackUrl: "/dashboard" })}
+          onClick={handleSocialLogin}
         >
           <svg
             xmlns="http://www.w3.org/2000/svg"
@@ -69,7 +75,7 @@ export function SocialLoginButtons() {
           variant="outline"
           className="h-16 w-full p-0"
           aria-label="Continuar com Facebook"
-          onClick={() => signIn("facebook", { callbackUrl: "/dashboard" })}
+          onClick={handleSocialLogin}
         >
           <svg
             xmlns="http://www.w3.org/2000/svg"

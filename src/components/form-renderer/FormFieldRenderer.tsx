@@ -251,6 +251,32 @@ export function FormFieldRenderer({
         </div>
       );
 
+    case "file":
+      const fileValue = value instanceof File ? value : null;
+      return (
+        <div className="space-y-2">
+          <Label htmlFor={field.id}>
+            {field.label}
+            {renderRequiredIndicator()}
+          </Label>
+          <Input
+            id={field.id}
+            type="file"
+            onChange={(e) => {
+              const file = e.target.files?.[0];
+              onChange(file);
+            }}
+            required={field.required}
+            accept={field.options?.join(",") || "*"}
+          />
+          {fileValue && (
+            <p className="text-sm text-muted-foreground">
+              Arquivo selecionado: {fileValue.name}
+            </p>
+          )}
+        </div>
+      );
+
     default:
       return null;
   }

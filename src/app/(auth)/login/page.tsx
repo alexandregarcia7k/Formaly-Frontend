@@ -8,8 +8,15 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { ThemeSwitcher } from "@/components/shared/theme-switcher";
 import { SocialLoginButtons } from "@/components/auth/social-login-buttons";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 
 export default function LoginPage() {
+  const router = useRouter();
+
+  const handleLogin = (e: React.FormEvent) => {
+    e.preventDefault();
+    router.push("/dashboard");
+  };
   return (
     <section className="flex min-h-screen items-center justify-center bg-background px-4 py-16">
       <div className="w-full max-w-md">
@@ -37,7 +44,7 @@ export default function LoginPage() {
           </TabsList>
 
           <TabsContent value="login" className="mt-6">
-            <form action="" className="space-y-6">
+            <form onSubmit={handleLogin} className="space-y-6">
               <SocialLoginButtons />
 
               <div className="relative">
@@ -88,7 +95,7 @@ export default function LoginPage() {
           </TabsContent>
 
           <TabsContent value="register" className="mt-6">
-            <form action="" className="space-y-6">
+            <form onSubmit={handleLogin} className="space-y-6">
               <SocialLoginButtons />
 
               <div className="relative">

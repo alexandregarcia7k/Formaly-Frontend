@@ -78,7 +78,7 @@ export function FormBuilderHeader({
           {/* Nome do formulário */}
           <div className="space-y-2">
             <Label htmlFor="form-name" className="text-sm font-medium">
-              Nome do Formulário *
+              Nome do Formulário <span className="text-red-600">*</span>
             </Label>
             <Input
               id="form-name"

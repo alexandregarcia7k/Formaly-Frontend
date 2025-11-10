@@ -1,3 +1,5 @@
+import { api } from "@/lib/api";
+
 export interface FieldTypeOption {
   name: string;
   label: string;
@@ -20,30 +22,35 @@ export interface FieldTypeCategory {
 }
 
 export class FieldTypesService {
-  private static baseUrl =
-    process.env.NEXT_PUBLIC_API_URL || "http://localhost:3333";
-
   /**
    * Busca todos os presets de campos disponíveis do backend
    * São 40 presets pré-configurados que usam 9 tipos HTML base
    */
   static async getFieldTypes(): Promise<FieldTypeOption[]> {
-    // TODO: Descomentar quando a API estiver pronta
-    // try {
-    //   const response = await fetch(`${this.baseUrl}/api/forms/field-types`);
-    //
-    //   if (!response.ok) {
-    //     throw new Error('Falha ao buscar presets de campos');
-    //   }
-    //
-    //   return await response.json();
-    // } catch (error) {
-    //   console.error('Erro ao buscar field types:', error);
-    //   return this.getFallbackFieldTypes();
-    // }
+    try {
+      const response = await api.get<
+        {
+          type: string;
+          label: string;
+          htmlType: string;
+          placeholder: string;
+          category: string;
+          validation?: Record<string, unknown>;
+        }[]
+      >("/api/forms/field-types");
 
-    // Usando fallback local enquanto a API não está pronta
-    return this.getFallbackFieldTypes();
+      // Mapear resposta da API para formato esperado
+      return response.data.map((item) => ({
+        name: item.type,
+        label: item.label,
+        type: item.htmlType,
+        placeholder: item.placeholder,
+        category: item.category,
+        validation: item.validation,
+      }));
+    } catch {
+      return this.getFallbackFieldTypes();
+    }
   }
 
   /**

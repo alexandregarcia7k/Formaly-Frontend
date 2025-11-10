@@ -1,9 +1,14 @@
 "use client";
 
 import { use, useEffect, useState } from "react";
+import { useRouter } from "next/navigation";
 import { FormBuilderContainer } from "@/components/form-builder";
 import { FormField } from "@/components/form-builder";
 import { FormsService } from "@/lib/services/forms.service";
+import { EmptyState } from "@/components/ui/empty-state";
+import { Button } from "@/components/ui/button";
+import { Loader2, AlertCircle } from "lucide-react";
+import { toast } from "sonner";
 
 interface EditFormPageProps {
   params: Promise<{ id: string }>;
@@ -11,6 +16,7 @@ interface EditFormPageProps {
 
 export default function EditFormPage({ params }: EditFormPageProps) {
   const { id } = use(params);
+  const router = useRouter();
   const [isLoading, setIsLoading] = useState(true);
   const [formData, setFormData] = useState<{
     id: string;
@@ -30,58 +36,29 @@ export default function EditFormPage({ params }: EditFormPageProps) {
       try {
         setIsLoading(true);
 
-        // TODO: Substituir por chamada real à API
-        // const response = await FormsService.getFormById(id);
+        // Buscar da API real
+        const response = await FormsService.getForm(id);
 
-        // Mock data temporário
-        const mockData = {
-          id,
-          name: "Cadastro de Clientes",
-          description: "Formulário para novos clientes",
-          password: "senha123",
-          fields: [
-            {
-              id: "field-1",
-              type: "text" as const,
-              label: "Nome Completo",
-              placeholder: "Digite seu nome",
-              required: true,
-            },
-            {
-              id: "field-2",
-              type: "email" as const,
-              label: "E-mail",
-              placeholder: "seu@email.com",
-              required: true,
-            },
-            {
-              id: "field-3",
-              type: "phone" as const,
-              label: "Telefone",
-              placeholder: "(00) 00000-0000",
-              required: false,
-            },
-            {
-              id: "field-4",
-              type: "select" as const,
-              label: "Como nos conheceu?",
-              placeholder: "Selecione uma opção",
-              required: true,
-              options: ["Google", "Redes Sociais", "Indicação", "Outro"],
-            },
-          ] as FormField[],
+        // Converter campos do backend para o formato do frontend
+        const frontendFields = FormsService.mapFieldsToFrontend(
+          response.fields
+        );
+
+        setFormData({
+          id: response.id,
+          name: response.name,
+          description: response.description || "",
+          password: undefined, // Nunca retornar senha do backend (apenas hash)
+          fields: frontendFields,
           // Configurações avançadas
-          expiresAt: new Date("2024-12-31T23:59:59"),
-          maxResponses: 100,
-          allowMultipleSubmissions: false,
-          successMessage:
-            "Obrigado por se cadastrar! Entraremos em contato em breve.",
-        };
-
-        setFormData(mockData);
+          expiresAt: response.expiresAt ? new Date(response.expiresAt) : null,
+          maxResponses: response.maxResponses,
+          allowMultipleSubmissions: response.allowMultipleSubmissions,
+          successMessage: response.successMessage || "",
+        });
       } catch (error) {
-        console.error("Erro ao carregar formulário:", error);
-        // TODO: Adicionar toast de erro
+        toast.error("Erro ao carregar formulário");
+        setFormData(null);
       } finally {
         setIsLoading(false);
       }
@@ -93,10 +70,12 @@ export default function EditFormPage({ params }: EditFormPageProps) {
   if (isLoading) {
     return (
       <div className="min-h-screen flex items-center justify-center">
-        <div className="text-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary mx-auto mb-4"></div>
-          <p className="text-muted-foreground">Carregando formulário...</p>
-        </div>
+        <EmptyState
+          icon={Loader2}
+          title="Carregando formulário..."
+          variant="default"
+          className="border-0 bg-transparent"
+        />
       </div>
     );
   }
@@ -104,12 +83,18 @@ export default function EditFormPage({ params }: EditFormPageProps) {
   if (!formData) {
     return (
       <div className="min-h-screen flex items-center justify-center">
-        <div className="text-center">
-          <h2 className="text-2xl font-bold mb-2">Formulário não encontrado</h2>
-          <p className="text-muted-foreground">
-            O formulário que você está tentando editar não existe.
-          </p>
-        </div>
+        <EmptyState
+          icon={AlertCircle}
+          title="Formulário não encontrado"
+          description="O formulário que você está tentando editar não existe."
+          variant="default"
+          action={
+            <Button onClick={() => router.push("/dashboard/forms")}>
+              Voltar para Formulários
+            </Button>
+          }
+          className="border-0 bg-transparent"
+        />
       </div>
     );
   }

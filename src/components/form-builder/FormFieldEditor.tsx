@@ -5,6 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent } from "@/components/ui/card";
+import { Switch } from "@/components/ui/switch";
 import {
   Select,
   SelectContent,
@@ -81,7 +82,7 @@ export function FormFieldEditor({
   const [predefinedTypes, setPredefinedTypes] = useState<FieldTypeOption[]>([]);
 
   // Buscar presets pré-definidos do backend
-  // Presets estão disponíveis para todos os tipos HTML base (text, email, phone, textarea, number, date, select, radio, checkbox)
+  // Filtra presets compatíveis com o tipo HTML atual do campo
   useEffect(() => {
     FieldTypesService.getFieldTypes().then((types) => {
       // Filtrar presets que correspondem ao tipo HTML atual do campo
@@ -152,7 +153,7 @@ export function FormFieldEditor({
         <Separator className="mb-4" />
 
         <div className="space-y-4">
-          {/* Preset Selector */}
+          {/* Preset Selector - Só exibe se houver presets compatíveis com o tipo HTML atual */}
           {predefinedTypes.length > 0 && (
             <div className="space-y-2">
               <Label className="text-xs font-semibold text-foreground flex items-center gap-1.5">
@@ -285,23 +286,10 @@ export function FormFieldEditor({
           {/* Campo Obrigatório */}
           <div className="flex items-center justify-between p-3 bg-muted/30 rounded-lg">
             <div className="flex items-center gap-3">
-              <button
-                type="button"
-                role="switch"
-                aria-checked={field.required}
-                onClick={() => onUpdate({ required: !field.required })}
-                className={cn(
-                  "relative inline-flex h-5 w-9 shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2",
-                  field.required ? "bg-primary" : "bg-input"
-                )}
-              >
-                <span
-                  className={cn(
-                    "pointer-events-none inline-block h-4 w-4 transform rounded-full bg-white shadow-lg ring-0 transition duration-200 ease-in-out",
-                    field.required ? "translate-x-4" : "translate-x-0"
-                  )}
-                />
-              </button>
+              <Switch
+                checked={field.required}
+                onCheckedChange={(checked) => onUpdate({ required: checked })}
+              />
               <Label
                 className="text-sm font-medium cursor-pointer"
                 onClick={() => onUpdate({ required: !field.required })}

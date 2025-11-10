@@ -2,19 +2,16 @@
 
 import * as React from "react";
 import Link from "next/link";
+import { MOCK_USER } from "@/lib/mock-data";
 
 // 🎯 ATENÇÃO: Para modificar links da sidebar, edite o arquivo:
 // src/config/sidebar.config.ts
-import {
-  sidebarUser,
-  mainLinks,
-  secondaryLinks,
-} from "@/config/sidebar.config";
+import { mainLinks, secondaryLinks } from "@/config/sidebar.config";
 
-import { NavMain } from "@/components/dashboard/nav-main";
-import { NavSecondary } from "@/components/dashboard/nav-secondary";
-import { NavUser } from "@/components/dashboard/nav-user";
-import { SidebarThemeSwitcher } from "@/components/dashboard/sidebar-theme-switcher";
+import { NavMain } from "@/components/sidebar/nav-main";
+import { NavSecondary } from "@/components/sidebar/nav-secondary";
+import { NavUser } from "@/components/sidebar/nav-user";
+import { SidebarThemeSwitcher } from "@/components/sidebar/sidebar-theme-switcher";
 import {
   Sidebar,
   SidebarContent,
@@ -26,7 +23,16 @@ import {
 } from "@/components/ui/sidebar";
 import { Logo } from "@/components/landing/logo";
 
-export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
+type AppSidebarProps = React.ComponentProps<typeof Sidebar>;
+
+export function AppSidebar({ ...props }: AppSidebarProps) {
+  // Dados mockados para desenvolvimento
+  const user = {
+    name: MOCK_USER.name,
+    email: MOCK_USER.email,
+    avatar: MOCK_USER.image || "",
+  };
+
   return (
     <Sidebar collapsible="icon" {...props}>
       <SidebarHeader>
@@ -56,8 +62,8 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
           <SidebarThemeSwitcher />
         </div>
 
-        {/* 📍 DADOS DO USUÁRIO - Configurados em sidebar.config.ts */}
-        <NavUser user={sidebarUser} />
+        {/* 📍 DADOS DO USUÁRIO - Vindos da sessão NextAuth */}
+        <NavUser user={user} />
       </SidebarFooter>
     </Sidebar>
   );

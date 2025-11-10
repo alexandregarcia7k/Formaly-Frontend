@@ -1,130 +1,288 @@
+// Mock Forms Service - Substitui todas as chamadas de API por dados mockados
+import { MOCK_FORMS, MOCK_USER, mockDelay } from "@/lib/mock-data";
 import { FormField } from "@/components/form-builder";
 
-// TODO: Configurar baseURL quando backend estiver pronto
-// const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001';
+// ===== INTERFACES =====
+
+export interface CreateFormFieldDTO {
+  type: string;
+  label: string;
+  name: string;
+  placeholder?: string;
+  required: boolean;
+  config?: Record<string, unknown>;
+}
 
 export interface CreateFormDTO {
   name: string;
   description?: string;
   password?: string;
-  fields: FormField[];
-  // Configurações avançadas
-  expiresAt?: Date;
   maxResponses?: number;
+  expiresAt?: Date;
   allowMultipleSubmissions?: boolean;
   successMessage?: string;
+  fields: CreateFormFieldDTO[];
+}
+
+export interface UpdateFormDTO {
+  name?: string;
+  description?: string;
+  status?: "ACTIVE" | "INACTIVE";
+  password?: string;
+  maxResponses?: number;
+  expiresAt?: Date;
+  allowMultipleSubmissions?: boolean;
+  fields?: CreateFormFieldDTO[];
+}
+
+export interface FormFieldResponse {
+  id: string;
+  formId: string;
+  type: string;
+  label: string;
+  name: string;
+  required: boolean;
+  config: Record<string, unknown> | null;
 }
 
 export interface FormResponse {
   id: string;
+  userId: string;
   name: string;
-  description?: string;
-  publicLink: string;
-  fields: FormField[];
+  description: string | null;
+  status: "ACTIVE" | "INACTIVE";
+  maxResponses: number | null;
+  expiresAt: string | null;
+  allowMultipleSubmissions: boolean;
+  successMessage: string | null;
   createdAt: string;
   updatedAt: string;
-  // Configurações avançadas
-  password?: string;
-  expiresAt?: string | null;
-  maxResponses?: number | null;
-  allowMultipleSubmissions?: boolean;
-  successMessage?: string;
+  fields: FormFieldResponse[];
+  _count: {
+    submissions: number;
+  };
 }
 
-/**
- * Serviço para comunicação com API NestJS do backend
- *
- * Endpoints esperados:
- * - POST   /api/forms          - Criar formulário
- * - GET    /api/forms          - Listar formulários do usuário
- * - GET    /api/forms/:id      - Buscar formulário por ID
- * - PUT    /api/forms/:id      - Atualizar formulário
- * - DELETE /api/forms/:id      - Deletar formulário
- * - GET    /api/forms/:id/responses - Buscar respostas do formulário
- */
+export interface FormsListResponse {
+  data: FormResponse[];
+  pagination: {
+    page: number;
+    limit: number;
+    total: number;
+    totalPages: number;
+  };
+}
+
+// ===== MOCK SERVICE =====
+
+// Estado local mutável para simular persistência durante a sessão
+const mockForms = [...MOCK_FORMS];
 export class FormsService {
   /**
-   * Cria um novo formulário no backend
-   * Backend irá gerar o slug único e retornar o link público
+   * Cria um novo formulário (MOCK)
    */
   static async createForm(data: CreateFormDTO): Promise<FormResponse> {
-    // TODO: Implementar quando backend estiver pronto
-    // const response = await fetch(`${API_URL}/api/forms`, {
-    //   method: 'POST',
-    //   headers: {
-    //     'Content-Type': 'application/json',
-    //     'Authorization': `Bearer ${getToken()}`,
-    //   },
-    //   body: JSON.stringify(data),
-    // });
-    //
-    // if (!response.ok) {
-    //   throw new Error('Erro ao criar formulário');
-    // }
-    //
-    // return response.json();
+    await mockDelay(500);
 
-    // Mock temporário para desenvolvimento
-    console.log("🚀 Dados que serão enviados para backend:", data);
+    const newForm: FormResponse = {
+      id: `form-${Date.now()}`,
+      userId: MOCK_USER.id,
+      name: data.name,
+      description: data.description || null,
+      status: "ACTIVE",
+      maxResponses: data.maxResponses || null,
+      expiresAt: data.expiresAt?.toISOString() || null,
+      allowMultipleSubmissions: data.allowMultipleSubmissions ?? false,
+      successMessage: data.successMessage || "",
+      createdAt: new Date().toISOString(),
+      updatedAt: new Date().toISOString(),
+      fields: data.fields.map((field, index) => ({
+        id: `field-${Date.now()}-${index}`,
+        formId: `form-${Date.now()}`,
+        type: field.type,
+        label: field.label,
+        name: field.name,
+        required: field.required,
+        config: field.config || null,
+      })),
+      _count: {
+        submissions: 0,
+      },
+    };
 
-    return new Promise((resolve) => {
-      setTimeout(() => {
-        const mockSlug = data.name
-          .toLowerCase()
-          .normalize("NFD")
-          .replace(/[\u0300-\u036f]/g, "")
-          .replace(/[^a-z0-9]+/g, "-")
-          .replace(/(^-|-$)/g, "");
-
-        resolve({
-          id: crypto.randomUUID(),
-          name: data.name,
-          description: data.description,
-          publicLink: `${window.location.origin}/f/${mockSlug}`,
-          fields: data.fields,
-          createdAt: new Date().toISOString(),
-          updatedAt: new Date().toISOString(),
-        });
-      }, 1000);
-    });
+    mockForms.unshift(newForm); // Adicionar no início (mais recente)
+    return newForm;
   }
 
   /**
-   * Atualiza um formulário existente
+   * Lista formulários do usuário (paginado) (MOCK)
+   */
+  static async listForms(page: number = 1): Promise<FormsListResponse> {
+    await mockDelay(400);
+
+    const limit = 10;
+    const total = mockForms.length;
+    const totalPages = Math.ceil(total / limit);
+    const start = (page - 1) * limit;
+    const end = start + limit;
+
+    return {
+      data: mockForms.slice(start, end),
+      pagination: {
+        page,
+        limit,
+        total,
+        totalPages,
+      },
+    };
+  }
+
+  /**
+   * Busca um formulário específico (MOCK)
+   */
+  static async getForm(id: string): Promise<FormResponse> {
+    await mockDelay(300);
+
+    const form = mockForms.find((f) => f.id === id);
+    if (!form) {
+      throw new Error("Formulário não encontrado");
+    }
+    return form;
+  }
+
+  /**
+   * Atualiza um formulário existente (MOCK)
    */
   static async updateForm(
     id: string,
-    data: Partial<CreateFormDTO>
+    data: UpdateFormDTO
   ): Promise<FormResponse> {
-    // TODO: Implementar quando backend estiver pronto
-    console.log("🔄 Atualizar formulário:", id, data);
-    throw new Error("Not implemented");
+    await mockDelay(400);
+
+    const formIndex = mockForms.findIndex((f) => f.id === id);
+    if (formIndex === -1) {
+      throw new Error("Formulário não encontrado");
+    }
+
+    const updatedForm = {
+      ...mockForms[formIndex],
+      name: data.name ?? mockForms[formIndex].name,
+      description: data.description ?? mockForms[formIndex].description,
+      status: data.status ?? mockForms[formIndex].status,
+      maxResponses: data.maxResponses ?? mockForms[formIndex].maxResponses,
+      expiresAt: data.expiresAt
+        ? data.expiresAt.toISOString()
+        : mockForms[formIndex].expiresAt,
+      allowMultipleSubmissions:
+        data.allowMultipleSubmissions ??
+        mockForms[formIndex].allowMultipleSubmissions,
+      updatedAt: new Date().toISOString(),
+      fields:
+        data.fields?.map((field, index) => ({
+          id: `field-${Date.now()}-${index}`,
+          formId: id,
+          type: field.type,
+          label: field.label,
+          name: field.name,
+          required: field.required,
+          config: field.config || null,
+        })) || mockForms[formIndex].fields,
+    };
+
+    mockForms[formIndex] = updatedForm;
+    return updatedForm;
   }
 
   /**
-   * Deleta um formulário
+   * Deleta um formulário (MOCK)
    */
   static async deleteForm(id: string): Promise<void> {
-    // TODO: Implementar quando backend estiver pronto
-    console.log("🗑️ Deletar formulário:", id);
-    throw new Error("Not implemented");
+    await mockDelay(300);
+
+    const formIndex = mockForms.findIndex((f) => f.id === id);
+    if (formIndex === -1) {
+      throw new Error("Formulário não encontrado");
+    }
+
+    mockForms.splice(formIndex, 1);
   }
 
   /**
-   * Lista todos os formulários do usuário
+   * Clona um formulário existente (MOCK)
    */
-  static async listForms(): Promise<FormResponse[]> {
-    // TODO: Implementar quando backend estiver pronto
-    console.log("📋 Listar formulários");
-    return [];
+  static async cloneForm(id: string): Promise<FormResponse> {
+    await mockDelay(500);
+
+    const original = mockForms.find((f) => f.id === id);
+    if (!original) {
+      throw new Error("Formulário não encontrado");
+    }
+
+    const clonedForm: FormResponse = {
+      ...original,
+      id: `form-${Date.now()}`,
+      name: `${original.name} (Cópia)`,
+      createdAt: new Date().toISOString(),
+      updatedAt: new Date().toISOString(),
+      fields: original.fields.map((field, index) => ({
+        ...field,
+        id: `field-${Date.now()}-${index}`,
+        formId: `form-${Date.now()}`,
+      })),
+      _count: {
+        submissions: 0,
+      },
+    };
+
+    mockForms.unshift(clonedForm);
+    return clonedForm;
   }
 
   /**
-   * Busca um formulário específico
+   * Converte campos do formato do backend para o formato do frontend
    */
-  static async getForm(id: string): Promise<FormResponse> {
-    // TODO: Implementar quando backend estiver pronto
-    console.log("🔍 Buscar formulário:", id);
-    throw new Error("Not implemented");
+  static mapFieldsToFrontend(
+    fields: FormFieldResponse[] | undefined
+  ): FormField[] {
+    if (!fields || !Array.isArray(fields)) {
+      return [];
+    }
+    return fields.map((field) => ({
+      id: field.id,
+      type: field.type as FormField["type"],
+      label: field.label,
+      placeholder: (field.config?.placeholder as string) || "",
+      required: field.required,
+      options: field.config?.options as string[] | undefined,
+      fieldType: field.type,
+    }));
+  }
+
+  /**
+   * Converte campos do formato do frontend para o formato do backend
+   */
+  static mapFieldsToBackend(fields: FormField[]): CreateFormFieldDTO[] {
+    return fields.map((field) => {
+      const dto: CreateFormFieldDTO = {
+        type: field.type,
+        label: field.label,
+        name: field.label.toLowerCase().replace(/\s+/g, "_"),
+        required: field.required,
+      };
+
+      // Adicionar placeholder se existir
+      if (field.placeholder) {
+        dto.placeholder = field.placeholder;
+      }
+
+      // Adicionar config com options se existir
+      if (field.options && field.options.length > 0) {
+        dto.config = {
+          options: field.options,
+        };
+      }
+
+      return dto;
+    });
   }
 }
