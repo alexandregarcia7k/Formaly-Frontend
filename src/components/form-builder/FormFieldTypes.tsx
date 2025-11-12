@@ -123,7 +123,7 @@ export function FormFieldTypes({
             className="w-full text-left p-2.5 rounded-lg hover:bg-accent transition-colors group cursor-grab active:cursor-grabbing"
           >
             <div className="flex items-start gap-2.5">
-              <field.icon className="h-4 w-4 text-muted-foreground group-hover:text-foreground mt-0.5 shrink-0" />
+              <field.icon className="h-4 w-4 text-primary mt-0.5 shrink-0" />
               <div className="flex-1 min-w-0">
                 <div className="font-medium text-sm">{field.label}</div>
                 <div className="text-xs text-muted-foreground line-clamp-1">

@@ -32,6 +32,7 @@ export interface UpdateFormDTO {
   maxResponses?: number;
   expiresAt?: Date;
   allowMultipleSubmissions?: boolean;
+  successMessage?: string;
   fields?: CreateFormFieldDTO[];
 }
 
@@ -176,6 +177,7 @@ export class FormsService {
       allowMultipleSubmissions:
         data.allowMultipleSubmissions ??
         mockForms[formIndex].allowMultipleSubmissions,
+      successMessage: data.successMessage ?? mockForms[formIndex].successMessage,
       updatedAt: new Date().toISOString(),
       fields:
         data.fields?.map((field, index) => ({

@@ -17,7 +17,7 @@ import {
 } from "@/components/ui/select";
 import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
-import { GripVertical, Trash2, Type, Sparkles } from "lucide-react";
+import { GripVertical, Trash2, Type, Sparkles, ChevronUp, ChevronDown } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { FieldType, FieldTypeConfig, FIELD_TYPES } from "./FormFieldTypes";
 import {
@@ -63,6 +63,10 @@ interface FormFieldEditorProps {
   onDragStart: () => void;
   onDragOver: (e: React.DragEvent) => void;
   onDragEnd: () => void;
+  onMoveUp?: () => void;
+  onMoveDown?: () => void;
+  isFirst?: boolean;
+  isLast?: boolean;
 }
 
 export function FormFieldEditor({
@@ -75,6 +79,10 @@ export function FormFieldEditor({
   onDragStart,
   onDragOver,
   onDragEnd,
+  onMoveUp,
+  onMoveDown,
+  isFirst,
+  isLast,
 }: FormFieldEditorProps) {
   const fieldType = fieldTypes.find((f) => f.type === field.type);
   const Icon = fieldType?.icon || Type;
@@ -126,7 +134,7 @@ export function FormFieldEditor({
         {/* Header com ícone e botão remover */}
         <div className="flex items-center justify-between mb-4">
           <div className="flex items-center gap-2">
-            <GripVertical className="h-4 w-4 text-muted-foreground cursor-grab" />
+            <GripVertical className="h-4 w-4 text-muted-foreground cursor-grab hidden lg:block" />
             <div className="flex items-center gap-2 px-2 py-1 bg-muted/50 rounded-md">
               <Icon className="h-3.5 w-3.5 text-primary" />
               <span className="text-xs font-medium text-muted-foreground">
@@ -135,19 +143,44 @@ export function FormFieldEditor({
             </div>
             {field.fieldType && field.fieldType !== "custom" && (
               <Badge variant="secondary" className="text-xs gap-1">
-                <Sparkles className="h-3 w-3" />
+                <Sparkles className="h-3 w-3 text-primary" />
                 Preset
               </Badge>
             )}
           </div>
-          <Button
-            variant="ghost"
-            size="icon-sm"
-            onClick={onRemove}
-            className="h-7 w-7 hover:bg-destructive/10 hover:text-destructive"
-          >
-            <Trash2 className="h-3.5 w-3.5" />
-          </Button>
+          <div className="flex items-center gap-1">
+            {/* Botões de reordenação */}
+            <div className="flex gap-1">
+              {!isFirst && onMoveUp && (
+                <Button
+                  variant="ghost"
+                  size="icon-sm"
+                  onClick={onMoveUp}
+                  className="h-7 w-7"
+                >
+                  <ChevronUp className="h-3.5 w-3.5" />
+                </Button>
+              )}
+              {!isLast && onMoveDown && (
+                <Button
+                  variant="ghost"
+                  size="icon-sm"
+                  onClick={onMoveDown}
+                  className="h-7 w-7"
+                >
+                  <ChevronDown className="h-3.5 w-3.5" />
+                </Button>
+              )}
+            </div>
+            <Button
+              variant="ghost"
+              size="icon-sm"
+              onClick={onRemove}
+              className="h-7 w-7 hover:bg-destructive/10 hover:text-destructive"
+            >
+              <Trash2 className="h-3.5 w-3.5" />
+            </Button>
+          </div>
         </div>
 
         <Separator className="mb-4" />
@@ -255,7 +288,7 @@ export function FormFieldEditor({
           )}
 
           {/* Label e Placeholder lado a lado */}
-          <div className="grid grid-cols-2 gap-3">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
             {/* Rótulo */}
             <div className="space-y-2">
               <Label className="text-xs font-semibold text-foreground">

@@ -79,7 +79,7 @@ export function FormSettings({
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-3">
               {isActive ? (
-                <Power className="h-5 w-5 text-green-500" />
+                <Power className="h-5 w-5 text-primary" />
               ) : (
                 <PowerOff className="h-5 w-5 text-muted-foreground" />
               )}
@@ -99,7 +99,7 @@ export function FormSettings({
               onClick={() => setIsActive(!isActive)}
               className={cn(
                 "relative inline-flex h-6 w-11 shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2",
-                isActive ? "bg-green-600" : "bg-input"
+                isActive ? "bg-primary" : "bg-input"
               )}
             >
               <span
@@ -275,7 +275,7 @@ export function FormSettings({
               }
               className={cn(
                 "relative inline-flex h-6 w-11 shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2",
-                allowMultipleSubmissions ? "bg-green-600" : "bg-input"
+                allowMultipleSubmissions ? "bg-primary" : "bg-input"
               )}
             >
               <span

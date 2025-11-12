@@ -176,14 +176,14 @@ export default function FormsPage() {
 
   return (
     <div className="flex flex-col gap-6">
-      <div className="flex items-center justify-between">
+      <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
         <div>
-          <h1 className="text-3xl font-bold tracking-tight">Formulários</h1>
-          <p className="text-muted-foreground">
+          <h1 className="text-2xl font-bold tracking-tight sm:text-3xl">Formulários</h1>
+          <p className="text-sm text-muted-foreground sm:text-base">
             Gerencie e acompanhe seus formulários
           </p>
         </div>
-        <Button onClick={() => router.push("/dashboard/forms/new")}>
+        <Button onClick={() => router.push("/dashboard/forms/new")} className="w-full sm:w-auto">
           <Plus className="mr-2 h-4 w-4" />
           Novo Formulário
         </Button>
@@ -247,12 +247,12 @@ export default function FormsPage() {
                 {forms.map((form) => (
                   <TableRow
                     key={form.id}
-                    className="cursor-pointer hover:bg-muted/50"
-                    onClick={() =>
-                      router.push(`/dashboard/forms/${form.id}/edit`)
-                    }
+                    className="hover:bg-muted/50"
                   >
-                    <TableCell>
+                    <TableCell
+                      className="cursor-pointer"
+                      onClick={() => router.push(`/dashboard/forms/${form.id}/edit`)}
+                    >
                       <div className="flex flex-col gap-1">
                         <div className="flex items-center gap-2">
                           <span className="font-medium">{form.name}</span>
@@ -264,17 +264,16 @@ export default function FormsPage() {
                         )}
                       </div>
                     </TableCell>
-                    <TableCell>
+                    <TableCell onClick={(e) => e.stopPropagation()}>
                       <div className="flex items-center gap-3">
                         <Switch
                           checked={form.status === "ACTIVE"}
                           onCheckedChange={() => toggleFormStatus(form.id)}
-                          onClick={(e) => e.stopPropagation()}
-                          className="data-[state=checked]:bg-green-500"
+                          className="data-[state=checked]:bg-primary"
                         />
                         <div className="flex items-center gap-2">
                           {form.status === "ACTIVE" ? (
-                            <Power className="h-4 w-4 text-green-500" />
+                            <Power className="h-4 w-4 text-primary" />
                           ) : (
                             <PowerOff className="h-4 w-4 text-muted-foreground" />
                           )}
@@ -284,7 +283,7 @@ export default function FormsPage() {
                             }
                             className={
                               form.status === "ACTIVE"
-                                ? "bg-green-500 hover:bg-green-600"
+                                ? "bg-primary hover:bg-green-600"
                                 : ""
                             }
                           >

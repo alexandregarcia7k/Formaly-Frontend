@@ -3,9 +3,11 @@
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { useState } from "react";
 import {
   ArrowLeft,
   Copy,
+  Check,
   Eye,
   EyeOff,
   Hammer,
@@ -54,10 +56,18 @@ export function FormBuilderHeader({
   onSave,
   isLoading = false,
 }: FormBuilderHeaderProps) {
+  const [linkCopied, setLinkCopied] = useState(false);
+
+  const handleCopyLink = () => {
+    onCopyLink();
+    setLinkCopied(true);
+    setTimeout(() => setLinkCopied(false), 2000);
+  };
+
   return (
     <>
       {/* Header */}
-      <div className="border-b bg-background px-6 py-4">
+      <div className="border-b bg-background px-4 sm:px-6 py-4">
         <div className="flex items-center justify-between mb-6">
           <Button variant="ghost" size="sm" onClick={onBack} className="gap-2">
             <ArrowLeft className="h-4 w-4" />
@@ -74,7 +84,7 @@ export function FormBuilderHeader({
           </div>
         </div>
 
-        <div className="grid gap-4 md:grid-cols-2">
+        <div className="grid gap-4 sm:grid-cols-2">
           {/* Nome do formulário */}
           <div className="space-y-2">
             <Label htmlFor="form-name" className="text-sm font-medium">
@@ -118,10 +128,18 @@ export function FormBuilderHeader({
                 type="button"
                 variant="outline"
                 size="icon"
-                onClick={onCopyLink}
+                onClick={handleCopyLink}
                 title="Copiar link"
+                className={cn(
+                  "transition-colors",
+                  linkCopied && "bg-primary border-primary hover:bg-primary"
+                )}
               >
-                <Copy className="h-4 w-4" />
+                {linkCopied ? (
+                  <Check className="h-4 w-4 text-primary" />
+                ) : (
+                  <Copy className="h-4 w-4 text-primary" />
+                )}
               </Button>
             </div>
           </div>
@@ -153,7 +171,7 @@ export function FormBuilderHeader({
                   {showPassword ? (
                     <EyeOff className="h-4 w-4 text-muted-foreground" />
                   ) : (
-                    <Eye className="h-4 w-4 text-muted-foreground" />
+                    <Eye className="h-4 w-4 text-primary" />
                   )}
                 </Button>
               </div>
@@ -175,43 +193,52 @@ export function FormBuilderHeader({
       </div>
 
       {/* Tabs flutuantes */}
-      <div className="flex justify-center py-4 border-b">
-        <div className="inline-flex items-center gap-1 p-1 bg-muted/50 rounded-lg">
+      <div className="flex justify-center py-4 border-b px-4">
+        <div className="inline-flex items-center gap-1 p-1 bg-muted/50 rounded-lg w-full sm:w-auto">
           <button
             onClick={() => onTabChange("builder")}
             className={cn(
-              "inline-flex items-center gap-2 px-4 py-2 rounded-md text-sm font-medium transition-all",
+              "inline-flex items-center justify-center gap-2 px-3 py-2 rounded-md text-sm font-medium transition-all flex-1 sm:flex-initial sm:px-4",
               activeTab === "builder"
                 ? "bg-background shadow-sm text-foreground"
                 : "text-muted-foreground hover:text-foreground"
             )}
           >
-            <Hammer className="h-4 w-4" />
-            Construtor
+            <Hammer className={cn(
+              "h-4 w-4",
+              activeTab === "builder" && "text-primary"
+            )} />
+            <span className="hidden sm:inline">Construtor</span>
           </button>
           <button
             onClick={() => onTabChange("preview")}
             className={cn(
-              "inline-flex items-center gap-2 px-4 py-2 rounded-md text-sm font-medium transition-all",
+              "inline-flex items-center justify-center gap-2 px-3 py-2 rounded-md text-sm font-medium transition-all flex-1 sm:flex-initial sm:px-4",
               activeTab === "preview"
                 ? "bg-background shadow-sm text-foreground"
                 : "text-muted-foreground hover:text-foreground"
             )}
           >
-            <Monitor className="h-4 w-4" />
-            Preview
+            <Monitor className={cn(
+              "h-4 w-4",
+              activeTab === "preview" && "text-primary"
+            )} />
+            <span className="hidden sm:inline">Preview</span>
           </button>
           <button
             onClick={() => onTabChange("settings")}
             className={cn(
-              "inline-flex items-center gap-2 px-4 py-2 rounded-md text-sm font-medium transition-all",
+              "inline-flex items-center justify-center gap-2 px-3 py-2 rounded-md text-sm font-medium transition-all flex-1 sm:flex-initial sm:px-4",
               activeTab === "settings"
                 ? "bg-background shadow-sm text-foreground"
                 : "text-muted-foreground hover:text-foreground"
             )}
           >
-            <Settings className="h-4 w-4" />
-            Configurações
+            <Settings className={cn(
+              "h-4 w-4",
+              activeTab === "settings" && "text-primary"
+            )} />
+            <span className="hidden sm:inline">Configurações</span>
           </button>
         </div>
       </div>
