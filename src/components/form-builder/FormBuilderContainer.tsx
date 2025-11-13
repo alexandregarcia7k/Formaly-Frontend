@@ -20,6 +20,7 @@ import { useDragAndDrop } from "@/hooks/useDragAndDrop";
 import { FormsService } from "@/lib/services/forms.service";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { createFormSchema, updateFormSchema } from "@/schemas";
 
 interface FormBuilderContainerProps {
   mode: "create" | "edit";
@@ -151,40 +152,49 @@ export function FormBuilderContainer({
   };
 
   const handleSave = async () => {
-    if (!formName.trim()) {
-      toast.error("O nome do formulário é obrigatório");
-      return;
-    }
-
     setIsLoading(true);
 
     try {
-      if (mode === "edit" && initialData?.id) {
-        // Atualizar formulário existente
-        await FormsService.updateForm(initialData.id, {
-          name: formName,
-          description: formDescription,
-          password: formPassword,
-          fields: FormsService.mapFieldsToBackend(selectedFields),
-          expiresAt: expiresAt || undefined,
-          maxResponses: maxResponses || undefined,
+      // Validar com Zod
+      const formData = {
+        name: formName,
+        description: formDescription || null,
+        fields: FormsService.mapFieldsToBackend(selectedFields),
+        settings: {
+          hasPassword: !!formPassword,
+          password: formPassword || null,
+          successMessage: successMessage || null,
           allowMultipleSubmissions,
-          successMessage: successMessage,
-        });
+        },
+      };
+
+      const schema = mode === "edit" ? updateFormSchema : createFormSchema;
+      const result = schema.safeParse(formData);
+
+      if (!result.success) {
+        const firstError = result.error.errors[0];
+        toast.error(firstError.message);
+        return;
+      }
+
+      // Após validação bem-sucedida, preparar dados para o service
+      const serviceData = {
+        name: formName,
+        description: formDescription || undefined,
+        password: formPassword || undefined,
+        fields: FormsService.mapFieldsToBackend(selectedFields),
+        expiresAt: expiresAt || undefined,
+        maxResponses: maxResponses || undefined,
+        allowMultipleSubmissions,
+        successMessage: successMessage || undefined,
+      };
+
+      if (mode === "edit" && initialData?.id) {
+        await FormsService.updateForm(initialData.id, serviceData);
         toast.success("Formulário atualizado com sucesso");
         router.push("/dashboard/forms");
       } else {
-        // Criar novo formulário
-        await FormsService.createForm({
-          name: formName,
-          description: formDescription,
-          password: formPassword,
-          fields: FormsService.mapFieldsToBackend(selectedFields),
-          expiresAt: expiresAt || undefined,
-          maxResponses: maxResponses || undefined,
-          allowMultipleSubmissions,
-          successMessage: successMessage,
-        });
+        await FormsService.createForm(serviceData);
         toast.success("Formulário criado com sucesso");
         router.push("/dashboard/forms");
       }

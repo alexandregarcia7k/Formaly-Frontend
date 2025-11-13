@@ -15,16 +15,18 @@ import {
 } from "lucide-react";
 
 export type FieldType =
-  | "email"
-  | "phone"
   | "text"
+  | "email"
+  | "number"
   | "textarea"
   | "select"
   | "radio"
   | "checkbox"
   | "date"
-  | "number"
-  | "file";
+  | "time"
+  | "datetime"
+  | "url"
+  | "tel";
 
 export interface FieldTypeConfig {
   type: FieldType;
@@ -48,7 +50,7 @@ export const FIELD_TYPES: FieldTypeConfig[] = [
     icon: Mail,
   },
   {
-    type: "phone",
+    type: "tel",
     label: "Telefone",
     description: "Campo de telefone",
     icon: Phone,
@@ -90,10 +92,22 @@ export const FIELD_TYPES: FieldTypeConfig[] = [
     icon: Calendar,
   },
   {
-    type: "file",
-    label: "Upload de Arquivo",
-    description: "Envio de arquivos",
-    icon: FileUp,
+    type: "url",
+    label: "URL",
+    description: "Campo de URL com validação",
+    icon: Type,
+  },
+  {
+    type: "time",
+    label: "Hora",
+    description: "Seletor de hora",
+    icon: Calendar,
+  },
+  {
+    type: "datetime",
+    label: "Data e Hora",
+    description: "Seletor de data e hora",
+    icon: Calendar,
   },
 ];
 

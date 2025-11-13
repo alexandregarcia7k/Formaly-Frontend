@@ -1,7 +1,9 @@
 "use client";
 
 import { use, useEffect, useState } from "react";
+import { toast } from "sonner";
 import { FormRenderer, PasswordProtection } from "@/components/form-renderer";
+import { FormField } from "@/components/form-builder";
 import { PublicFormsService } from "@/lib/services/public-forms.service";
 import { Loader2, AlertCircle } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -17,15 +19,7 @@ export default function PublicFormPage({ params }: PublicFormPageProps) {
   const [formData, setFormData] = useState<{
     name: string;
     description: string;
-    fields: Array<{
-      id: string;
-      type: any;
-      label: string;
-      required: boolean;
-      placeholder?: string;
-      options?: string[];
-      fieldType: string;
-    }>;
+    fields: FormField[];
     hasPassword: boolean;
   } | null>(null);
   const [showPasswordPrompt, setShowPasswordPrompt] = useState(false);
@@ -47,11 +41,11 @@ export default function PublicFormPage({ params }: PublicFormPageProps) {
         description: response.description || "",
         fields: response.fields.map((field) => ({
           id: field.id,
-          type: field.type as any,
+          type: field.type as FormField["type"],
           label: field.label,
           required: field.required,
           placeholder: field.config.placeholder || "",
-          options: field.config.options,
+          options: field.config.options as string[] | undefined,
           fieldType: field.type,
         })),
         hasPassword: response.requiresPassword,
@@ -86,11 +80,9 @@ export default function PublicFormPage({ params }: PublicFormPageProps) {
       await PublicFormsService.submitForm(id, {
         values: submissionData,
       });
-      // TODO: Mostrar mensagem de sucesso
-      alert("Formulário enviado com sucesso!");
+      toast.success("Formulário enviado com sucesso!");
     } catch {
-      // TODO: Mostrar mensagem de erro
-      alert("Erro ao enviar formulário. Tente novamente.");
+      toast.error("Erro ao enviar formulário. Tente novamente.");
     }
   };
 

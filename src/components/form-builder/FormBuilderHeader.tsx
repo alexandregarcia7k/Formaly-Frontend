@@ -3,7 +3,7 @@
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { useState } from "react";
+import { useState, useMemo } from "react";
 import {
   ArrowLeft,
   Copy,
@@ -58,6 +58,21 @@ export function FormBuilderHeader({
 }: FormBuilderHeaderProps) {
   const [linkCopied, setLinkCopied] = useState(false);
 
+  // Validação em tempo real
+  const nameError = useMemo(() => {
+    if (!formName) return "Nome é obrigatório";
+    if (formName.length < 3) return "Mínimo 3 caracteres";
+    if (formName.length > 100) return "Máximo 100 caracteres";
+    return null;
+  }, [formName]);
+
+  const passwordError = useMemo(() => {
+    if (!formPassword) return null;
+    if (formPassword.length < 4) return "Mínimo 4 caracteres";
+    if (formPassword.length > 8) return "Máximo 8 caracteres";
+    return null;
+  }, [formPassword]);
+
   const handleCopyLink = () => {
     onCopyLink();
     setLinkCopied(true);
@@ -95,7 +110,11 @@ export function FormBuilderHeader({
               placeholder="Ex: Cadastro de Clientes"
               value={formName}
               onChange={(e) => onFormNameChange(e.target.value)}
+              className={cn(nameError && "border-red-500 focus-visible:ring-red-500")}
             />
+            {nameError && (
+              <p className="text-xs text-red-600">{nameError}</p>
+            )}
           </div>
 
           {/* Descrição */}
@@ -136,7 +155,7 @@ export function FormBuilderHeader({
                 )}
               >
                 {linkCopied ? (
-                  <Check className="h-4 w-4 text-primary" />
+                  <Check className="h-4 w-4 text-white" />
                 ) : (
                   <Copy className="h-4 w-4 text-primary" />
                 )}
@@ -158,7 +177,7 @@ export function FormBuilderHeader({
                   value={formPassword}
                   onChange={(e) => onFormPasswordChange(e.target.value)}
                   maxLength={8}
-                  className="pr-10"
+                  className={cn("pr-10", passwordError && "border-red-500 focus-visible:ring-red-500")}
                 />
                 <Button
                   type="button"
@@ -188,6 +207,9 @@ export function FormBuilderHeader({
                 </Button>
               )}
             </div>
+            {passwordError && (
+              <p className="text-xs text-red-600">{passwordError}</p>
+            )}
           </div>
         </div>
       </div>

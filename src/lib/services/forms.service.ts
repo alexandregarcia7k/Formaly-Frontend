@@ -94,7 +94,7 @@ export class FormsService {
       maxResponses: data.maxResponses || null,
       expiresAt: data.expiresAt?.toISOString() || null,
       allowMultipleSubmissions: data.allowMultipleSubmissions ?? false,
-      successMessage: data.successMessage || "",
+      successMessage: data.successMessage || null,
       createdAt: new Date().toISOString(),
       updatedAt: new Date().toISOString(),
       fields: data.fields.map((field, index) => ({

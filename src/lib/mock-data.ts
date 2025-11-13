@@ -30,6 +30,7 @@ export interface MockForm {
   maxResponses: number | null;
   expiresAt: string | null;
   allowMultipleSubmissions: boolean;
+  successMessage: string | null;
   createdAt: string;
   updatedAt: string;
   fields: MockFormField[];
@@ -59,6 +60,7 @@ export const MOCK_FORMS: MockForm[] = [
     maxResponses: 500,
     expiresAt: null,
     allowMultipleSubmissions: true,
+    successMessage: null,
     createdAt: "2024-11-01T10:00:00.000Z",
     updatedAt: "2024-11-01T10:00:00.000Z",
     fields: [
@@ -124,6 +126,7 @@ export const MOCK_FORMS: MockForm[] = [
     maxResponses: 200,
     expiresAt: null,
     allowMultipleSubmissions: false,
+    successMessage: null,
     createdAt: "2024-11-02T14:30:00.000Z",
     updatedAt: "2024-11-02T14:30:00.000Z",
     fields: [
@@ -163,6 +166,7 @@ export const MOCK_FORMS: MockForm[] = [
     maxResponses: 100,
     expiresAt: null,
     allowMultipleSubmissions: false,
+    successMessage: null,
     createdAt: "2024-11-03T09:15:00.000Z",
     updatedAt: "2024-11-03T09:15:00.000Z",
     fields: [
@@ -222,6 +226,7 @@ export const MOCK_FORMS: MockForm[] = [
     maxResponses: null,
     expiresAt: null,
     allowMultipleSubmissions: true,
+    successMessage: null,
     createdAt: "2024-11-04T11:00:00.000Z",
     updatedAt: "2024-11-04T11:00:00.000Z",
     fields: [
@@ -273,6 +278,7 @@ export const MOCK_FORMS: MockForm[] = [
     maxResponses: 50,
     expiresAt: "2024-12-31T23:59:59.000Z",
     allowMultipleSubmissions: false,
+    successMessage: null,
     createdAt: "2024-11-05T16:20:00.000Z",
     updatedAt: "2024-11-05T16:20:00.000Z",
     fields: [
@@ -334,6 +340,7 @@ export const MOCK_FORMS: MockForm[] = [
     maxResponses: null,
     expiresAt: null,
     allowMultipleSubmissions: false,
+    successMessage: null,
     createdAt: "2024-11-06T08:45:00.000Z",
     updatedAt: "2024-11-06T08:45:00.000Z",
     fields: [
@@ -385,6 +392,7 @@ export const MOCK_FORMS: MockForm[] = [
     maxResponses: null,
     expiresAt: null,
     allowMultipleSubmissions: true,
+    successMessage: null,
     createdAt: "2024-11-07T13:10:00.000Z",
     updatedAt: "2024-11-07T13:10:00.000Z",
     fields: [
@@ -446,6 +454,7 @@ export const MOCK_FORMS: MockForm[] = [
     maxResponses: null,
     expiresAt: null,
     allowMultipleSubmissions: true,
+    successMessage: null,
     createdAt: "2024-11-08T15:30:00.000Z",
     updatedAt: "2024-11-08T15:30:00.000Z",
     fields: [
@@ -496,6 +505,7 @@ export const MOCK_FORMS: MockForm[] = [
     maxResponses: 30,
     expiresAt: null,
     allowMultipleSubmissions: false,
+    successMessage: null,
     createdAt: "2024-11-09T10:00:00.000Z",
     updatedAt: "2024-11-09T10:00:00.000Z",
     fields: [
@@ -555,6 +565,7 @@ export const MOCK_FORMS: MockForm[] = [
     maxResponses: null,
     expiresAt: null,
     allowMultipleSubmissions: false,
+    successMessage: null,
     createdAt: "2024-11-10T12:00:00.000Z",
     updatedAt: "2024-11-10T12:00:00.000Z",
     fields: [
@@ -584,6 +595,162 @@ export const MOCK_FORMS: MockForm[] = [
       {
         id: "field-10-3",
         formId: "10",
+        type: "checkbox",
+        label: "Quais redes sociais você usa?",
+        name: "redes_sociais",
+        required: false,
+        config: {
+          options: ["Facebook", "Instagram", "Twitter", "LinkedIn", "TikTok"],
+        },
+      },
+    ],
+    _count: {
+      submissions: 156,
+    },
+  },
+  {
+    id: "11",
+    userId: "mock-user-1",
+    name: "Pesquisa de Mercado",
+    description: "Sua opinião é importante",
+    status: "ACTIVE",
+    maxResponses: null,
+    expiresAt: null,
+    allowMultipleSubmissions: false,
+    successMessage: null,
+    createdAt: "2024-11-10T12:00:00.000Z",
+    updatedAt: "2024-11-10T12:00:00.000Z",
+    fields: [
+      {
+        id: "field-11-1",
+        formId: "11",
+        type: "number",
+        label: "Idade",
+        name: "idade",
+        required: true,
+        config: {
+          min: 18,
+          max: 100,
+        },
+      },
+      {
+        id: "field-11-2",
+        formId: "11",
+        type: "radio",
+        label: "Gênero",
+        name: "genero",
+        required: false,
+        config: {
+          options: ["Masculino", "Feminino", "Outro", "Prefiro não informar"],
+        },
+      },
+      {
+        id: "field-11-3",
+        formId: "11",
+        type: "checkbox",
+        label: "Quais redes sociais você usa?",
+        name: "redes_sociais",
+        required: false,
+        config: {
+          options: ["Facebook", "Instagram", "Twitter", "LinkedIn", "TikTok"],
+        },
+      },
+    ],
+    _count: {
+      submissions: 156,
+    },
+  },
+  {
+    id: "12",
+    userId: "mock-user-1",
+    name: "Pesquisa de Mercado",
+    description: "Sua opinião é importante",
+    status: "ACTIVE",
+    maxResponses: null,
+    expiresAt: null,
+    allowMultipleSubmissions: false,
+    successMessage: null,
+    createdAt: "2024-11-10T12:00:00.000Z",
+    updatedAt: "2024-11-10T12:00:00.000Z",
+    fields: [
+      {
+        id: "field-12-1",
+        formId: "12",
+        type: "number",
+        label: "Idade",
+        name: "idade",
+        required: true,
+        config: {
+          min: 18,
+          max: 100,
+        },
+      },
+      {
+        id: "field-12-2",
+        formId: "12",
+        type: "radio",
+        label: "Gênero",
+        name: "genero",
+        required: false,
+        config: {
+          options: ["Masculino", "Feminino", "Outro", "Prefiro não informar"],
+        },
+      },
+      {
+        id: "field-12-3",
+        formId: "12",
+        type: "checkbox",
+        label: "Quais redes sociais você usa?",
+        name: "redes_sociais",
+        required: false,
+        config: {
+          options: ["Facebook", "Instagram", "Twitter", "LinkedIn", "TikTok"],
+        },
+      },
+    ],
+    _count: {
+      submissions: 156,
+    },
+  },
+  {
+    id: "13",
+    userId: "mock-user-1",
+    name: "Pesquisa de Mercado",
+    description: "Sua opinião é importante",
+    status: "ACTIVE",
+    maxResponses: null,
+    expiresAt: null,
+    allowMultipleSubmissions: false,
+    successMessage: null,
+    createdAt: "2024-11-10T12:00:00.000Z",
+    updatedAt: "2024-11-10T12:00:00.000Z",
+    fields: [
+      {
+        id: "field-13-1",
+        formId: "13",
+        type: "number",
+        label: "Idade",
+        name: "idade",
+        required: true,
+        config: {
+          min: 18,
+          max: 100,
+        },
+      },
+      {
+        id: "field-13-2",
+        formId: "13",
+        type: "radio",
+        label: "Gênero",
+        name: "genero",
+        required: false,
+        config: {
+          options: ["Masculino", "Feminino", "Outro", "Prefiro não informar"],
+        },
+      },
+      {
+        id: "field-13-3",
+        formId: "13",
         type: "checkbox",
         label: "Quais redes sociais você usa?",
         name: "redes_sociais",

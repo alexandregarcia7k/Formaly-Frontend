@@ -42,7 +42,8 @@ export function FormFieldRenderer({
   switch (field.type) {
     case "text":
     case "email":
-    case "phone":
+    case "url":
+    case "tel":
       return (
         <div className="space-y-2">
           <Label htmlFor={field.id}>
@@ -54,8 +55,10 @@ export function FormFieldRenderer({
             type={
               field.type === "email"
                 ? "email"
-                : field.type === "phone"
+                : field.type === "tel"
                 ? "tel"
+                : field.type === "url"
+                ? "url"
                 : "text"
             }
             placeholder={field.placeholder}
@@ -133,6 +136,42 @@ export function FormFieldRenderer({
               />
             </PopoverContent>
           </Popover>
+        </div>
+      );
+
+    case "time":
+      return (
+        <div className="space-y-2">
+          <Label htmlFor={field.id}>
+            {field.label}
+            {renderRequiredIndicator()}
+          </Label>
+          <Input
+            id={field.id}
+            type="time"
+            placeholder={field.placeholder}
+            value={(value as string) || ""}
+            onChange={(e) => onChange(e.target.value)}
+            required={field.required}
+          />
+        </div>
+      );
+
+    case "datetime":
+      return (
+        <div className="space-y-2">
+          <Label htmlFor={field.id}>
+            {field.label}
+            {renderRequiredIndicator()}
+          </Label>
+          <Input
+            id={field.id}
+            type="datetime-local"
+            placeholder={field.placeholder}
+            value={(value as string) || ""}
+            onChange={(e) => onChange(e.target.value)}
+            required={field.required}
+          />
         </div>
       );
 
@@ -251,33 +290,13 @@ export function FormFieldRenderer({
         </div>
       );
 
-    case "file":
-      const fileValue = value instanceof File ? value : null;
+    default:
       return (
         <div className="space-y-2">
-          <Label htmlFor={field.id}>
-            {field.label}
-            {renderRequiredIndicator()}
+          <Label className="text-muted-foreground">
+            {field.label} (tipo não suportado: {field.type})
           </Label>
-          <Input
-            id={field.id}
-            type="file"
-            onChange={(e) => {
-              const file = e.target.files?.[0];
-              onChange(file);
-            }}
-            required={field.required}
-            accept={field.options?.join(",") || "*"}
-          />
-          {fileValue && (
-            <p className="text-sm text-muted-foreground">
-              Arquivo selecionado: {fileValue.name}
-            </p>
-          )}
         </div>
       );
-
-    default:
-      return null;
   }
 }

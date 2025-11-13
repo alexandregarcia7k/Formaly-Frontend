@@ -1,6 +1,8 @@
 "use client";
 
 import { useState } from "react";
+import { toast } from "sonner";
+import { z } from "zod";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -25,11 +27,27 @@ export function PasswordProtection({
   maxLength = 8,
 }: PasswordProtectionProps) {
   const [password, setPassword] = useState("");
+  const [error, setError] = useState("");
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const passwordSchema = z.string().min(4, "Senha deve ter no mínimo 4 caracteres").max(maxLength, `Senha deve ter no máximo ${maxLength} caracteres`);
+
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    onPasswordSubmit(password);
-    setPassword(""); // Limpa a senha após submissão
+    setError("");
+
+    const result = passwordSchema.safeParse(password);
+    if (!result.success) {
+      setError(result.error.errors[0].message);
+      return;
+    }
+
+    try {
+      await onPasswordSubmit(password);
+      setPassword("");
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Senha incorreta");
+      toast.error("Senha incorreta");
+    }
   };
 
   return (
@@ -53,10 +71,15 @@ export function PasswordProtection({
                 type="password"
                 placeholder="Digite a senha"
                 value={password}
-                onChange={(e) => setPassword(e.target.value)}
+                onChange={(e) => {
+                  setPassword(e.target.value);
+                  setError("");
+                }}
                 required
                 maxLength={maxLength}
+                className={error ? "border-red-500" : ""}
               />
+              {error && <p className="text-xs text-red-600">{error}</p>}
             </div>
             <Button type="submit" className="w-full">
               Acessar Formulário

@@ -1,6 +1,8 @@
 "use client";
 
+import { useState } from "react";
 import { Eye } from "lucide-react";
+import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import {
   Card,
@@ -11,6 +13,7 @@ import {
 } from "@/components/ui/card";
 import { FormField } from "@/components/form-builder/FormFieldEditor";
 import { FormFieldRenderer } from "./FormFieldRenderer";
+import { createResponseSchema } from "@/schemas";
 
 interface FormRendererProps {
   formName: string;
@@ -37,8 +40,31 @@ export function FormRenderer({
   isSubmitting = false,
   showPreviewHeader = false,
 }: FormRendererProps) {
+  const [errors, setErrors] = useState<Record<string, string>>({});
+
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
+    setErrors({});
+
+    // Validar com Zod
+    const schema = createResponseSchema(
+      fields.map((f) => ({ id: f.id, type: f.type, required: f.required, label: f.label }))
+    );
+
+    const result = schema.safeParse(formData);
+
+    if (!result.success) {
+      const fieldErrors: Record<string, string> = {};
+      result.error.errors.forEach((err) => {
+        if (err.path[0]) {
+          fieldErrors[err.path[0] as string] = err.message;
+        }
+      });
+      setErrors(fieldErrors);
+      toast.error("Por favor, corrija os erros no formulário");
+      return;
+    }
+
     onSubmit(formData);
   };
 
@@ -87,12 +113,26 @@ export function FormRenderer({
             ) : (
               <form onSubmit={handleSubmit} className="space-y-6">
                 {fields.map((field) => (
-                  <FormFieldRenderer
-                    key={field.id}
-                    field={field}
-                    value={formData[field.id]}
-                    onChange={(value) => onFieldChange(field.id, value)}
-                  />
+                  <div key={field.id}>
+                    <FormFieldRenderer
+                      field={field}
+                      value={formData[field.id]}
+                      onChange={(value) => {
+                        onFieldChange(field.id, value);
+                        // Limpar erro ao corrigir campo
+                        if (errors[field.id]) {
+                          setErrors((prev) => {
+                            const newErrors = { ...prev };
+                            delete newErrors[field.id];
+                            return newErrors;
+                          });
+                        }
+                      }}
+                    />
+                    {errors[field.id] && (
+                      <p className="text-xs text-red-600 mt-1">{errors[field.id]}</p>
+                    )}
+                  </div>
                 ))}
 
                 <div className="pt-4 border-t">
