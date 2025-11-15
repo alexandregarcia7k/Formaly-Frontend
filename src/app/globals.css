@@ -151,4 +151,42 @@
   body {
     @apply bg-background text-foreground;
   }
+
+  /* Toaster customizado para seguir o tema */
+  [data-sonner-toast] {
+    background-color: hsl(var(--card)) !important;
+    border-color: hsl(var(--border)) !important;
+    color: hsl(var(--card-foreground)) !important;
+  }
+
+  [data-sonner-toast] [data-title] {
+    color: hsl(var(--card-foreground)) !important;
+  }
+
+  [data-sonner-toast] [data-description] {
+    color: hsl(var(--muted-foreground)) !important;
+  }
+
+  [data-sonner-toast] [data-button] {
+    background-color: hsl(var(--primary)) !important;
+    color: hsl(var(--primary-foreground)) !important;
+  }
+
+  [data-sonner-toast] [data-close-button] {
+    background-color: hsl(var(--secondary)) !important;
+    border-color: hsl(var(--border)) !important;
+    color: hsl(var(--secondary-foreground)) !important;
+  }
+
+  [data-sonner-toast][data-type="success"] [data-icon] {
+    color: hsl(var(--primary)) !important;
+  }
+
+  [data-sonner-toast][data-type="error"] [data-icon] {
+    color: hsl(var(--destructive)) !important;
+  }
+
+  [data-sonner-toast][data-type="info"] [data-icon] {
+    color: hsl(var(--primary)) !important;
+  }
 }

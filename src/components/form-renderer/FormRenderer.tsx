@@ -135,16 +135,18 @@ export function FormRenderer({
                   </div>
                 ))}
 
-                <div className="pt-4 border-t">
-                  <Button
-                    type="submit"
-                    className="w-full"
-                    size="lg"
-                    disabled={isSubmitting}
-                  >
-                    {isSubmitting ? "Enviando..." : submitLabel}
-                  </Button>
-                </div>
+                {submitLabel && (
+                  <div className="pt-4 border-t">
+                    <Button
+                      type="submit"
+                      className="w-full"
+                      size="lg"
+                      disabled={isSubmitting}
+                    >
+                      {isSubmitting ? "Enviando..." : submitLabel}
+                    </Button>
+                  </div>
+                )}
               </form>
             )}
           </CardContent>

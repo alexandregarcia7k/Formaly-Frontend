@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useMemo, useRef } from "react";
 import { useRouter } from "next/navigation";
+import type { SortConfig } from "@/components/datatable/types";
 import {
   Plus,
   MoreVertical,
@@ -63,6 +64,7 @@ export default function FormsPage() {
   const [dateRange, setDateRange] = useState<{ from?: Date; to?: Date }>({});
   const searchInputRef = useRef<HTMLInputElement>(null);
   const [isMac, setIsMac] = useState(false);
+  const [sortConfig, setSortConfig] = useState<SortConfig>({ key: null, direction: null });
 
   // Detectar sistema operacional (client-side only)
   useEffect(() => {
@@ -204,48 +206,99 @@ export default function FormsPage() {
     toast.success("Link copiado para área de transferência");
   };
 
-  // Filtrar formulários
-  const filteredForms = forms.filter((form) => {
-    const matchSearch = 
-      form.name.toLowerCase().includes(debouncedSearch.toLowerCase()) ||
-      (form.description?.toLowerCase().includes(debouncedSearch.toLowerCase()) ?? false);
-    
-    const matchStatus = 
-      statusFilter === FORM_STATUS.ALL || 
-      form.status === statusFilter;
-    
-    const matchResponses = 
-      responsesFilter === FORM_RESPONSES_FILTER.ALL ||
-      (responsesFilter === FORM_RESPONSES_FILTER.WITH && form._count.submissions > 0) ||
-      (responsesFilter === FORM_RESPONSES_FILTER.WITHOUT && form._count.submissions === 0);
-    
-    const matchDate = 
-      !dateRange.from ||
-      (() => {
-        const formDate = new Date(form.createdAt);
-        formDate.setHours(0, 0, 0, 0);
-        const fromDate = new Date(dateRange.from);
-        fromDate.setHours(0, 0, 0, 0);
-        const toDate = dateRange.to ? new Date(dateRange.to) : null;
-        if (toDate) toDate.setHours(23, 59, 59, 999);
-        
-        return formDate >= fromDate && (!toDate || formDate <= toDate);
-      })();
-    
-    return matchSearch && matchStatus && matchResponses && matchDate;
-  });
+  // Filtrar e ordenar formulários
+  const filteredAndSortedForms = useMemo(() => {
+    let filtered = forms.filter((form) => {
+      const matchSearch = 
+        form.name.toLowerCase().includes(debouncedSearch.toLowerCase()) ||
+        (form.description?.toLowerCase().includes(debouncedSearch.toLowerCase()) ?? false);
+      
+      const matchStatus = 
+        statusFilter === FORM_STATUS.ALL || 
+        form.status === statusFilter;
+      
+      const matchResponses = 
+        responsesFilter === FORM_RESPONSES_FILTER.ALL ||
+        (responsesFilter === FORM_RESPONSES_FILTER.WITH && form._count.submissions > 0) ||
+        (responsesFilter === FORM_RESPONSES_FILTER.WITHOUT && form._count.submissions === 0);
+      
+      const matchDate = 
+        !dateRange.from ||
+        (() => {
+          const formDate = new Date(form.createdAt);
+          formDate.setHours(0, 0, 0, 0);
+          const fromDate = new Date(dateRange.from);
+          fromDate.setHours(0, 0, 0, 0);
+          const toDate = dateRange.to ? new Date(dateRange.to) : null;
+          if (toDate) toDate.setHours(23, 59, 59, 999);
+          
+          return formDate >= fromDate && (!toDate || formDate <= toDate);
+        })();
+      
+      return matchSearch && matchStatus && matchResponses && matchDate;
+    });
+
+    // Ordenar
+    if (sortConfig.key && sortConfig.direction) {
+      filtered = [...filtered].sort((a, b) => {
+        let aValue: string | Date | number;
+        let bValue: string | Date | number;
+
+        switch (sortConfig.key) {
+          case "name":
+            aValue = a.name;
+            bValue = b.name;
+            break;
+          case "status":
+            aValue = a.status;
+            bValue = b.status;
+            break;
+          case "responses":
+            aValue = a._count.submissions;
+            bValue = b._count.submissions;
+            break;
+          case "createdAt":
+            aValue = new Date(a.createdAt).getTime();
+            bValue = new Date(b.createdAt).getTime();
+            break;
+          case "updatedAt":
+            aValue = new Date(a.updatedAt).getTime();
+            bValue = new Date(b.updatedAt).getTime();
+            break;
+          default:
+            return 0;
+        }
+
+        if (aValue < bValue) return sortConfig.direction === "asc" ? -1 : 1;
+        if (aValue > bValue) return sortConfig.direction === "asc" ? 1 : -1;
+        return 0;
+      });
+    }
+
+    return filtered;
+  }, [forms, debouncedSearch, statusFilter, responsesFilter, dateRange, sortConfig]);
+
+  const handleSort = (key: string) => {
+    setSortConfig((current) => {
+      if (current.key === key) {
+        if (current.direction === "asc") return { key, direction: "desc" };
+        if (current.direction === "desc") return { key: null, direction: null };
+      }
+      return { key, direction: "asc" };
+    });
+  };
 
   // Calcular estatísticas (memoizado para evitar recálculos desnecessários)
   const stats = useMemo(() => {
-    const totalForms = filteredForms.length;
-    const activeForms = filteredForms.filter((f) => f.status === "ACTIVE").length;
-    const totalResponses = filteredForms.reduce(
+    const totalForms = filteredAndSortedForms.length;
+    const activeForms = filteredAndSortedForms.filter((f) => f.status === "ACTIVE").length;
+    const totalResponses = filteredAndSortedForms.reduce(
       (acc, f) => acc + f._count.submissions,
       0
     );
     const avgResponses =
       totalForms > 0 ? Math.round(totalResponses / totalForms) : 0;
-    const formsWithResponses = filteredForms.filter(
+    const formsWithResponses = filteredAndSortedForms.filter(
       (f) => f._count.submissions > 0
     ).length;
     const conversionRate =
@@ -268,11 +321,11 @@ export default function FormsPage() {
       },
       {
         title: "Formulário Mais Popular",
-        value: filteredForms.length > 0 ? Math.max(...filteredForms.map((f) => f._count.submissions), 0) : 0,
+        value: filteredAndSortedForms.length > 0 ? Math.max(...filteredAndSortedForms.map((f) => f._count.submissions), 0) : 0,
         trend: { value: "+5%", isPositive: true },
         description:
-          filteredForms.length > 0
-            ? [...filteredForms].sort((a, b) => b._count.submissions - a._count.submissions)[0]
+          filteredAndSortedForms.length > 0
+            ? [...filteredAndSortedForms].sort((a, b) => b._count.submissions - a._count.submissions)[0]
                 ?.name || "N/A"
             : "N/A",
         footer: "Maior número de respostas",
@@ -285,7 +338,7 @@ export default function FormsPage() {
         footer: "Formulários respondidos",
       },
     ];
-  }, [filteredForms]);
+  }, [filteredAndSortedForms]);
 
   return (
     <div className="@container/main space-y-6">
@@ -363,7 +416,7 @@ export default function FormsPage() {
                 disabled={search === "" && statusFilter === FORM_STATUS.ALL && responsesFilter === FORM_RESPONSES_FILTER.ALL && !dateRange.from}
                 aria-label="Limpar todos os filtros ativos"
               />
-              <ResultsCount total={forms.length} filtered={filteredForms.length} />
+              <ResultsCount total={forms.length} filtered={filteredAndSortedForms.length} />
             </FilterBar>
           </div>
 
@@ -387,16 +440,18 @@ export default function FormsPage() {
       )}
 
       <DataTable
-        data={filteredForms}
+        data={filteredAndSortedForms}
         headers={[
-          "Formulário",
-          "Status",
-          "Link",
-          "Respostas",
-          "Criado em",
-          "Atualizado em",
-          "Ações",
+          { label: "Formulário", sortKey: "name" },
+          { label: "Status", sortKey: "status" },
+          { label: "Link" },
+          { label: "Respostas", sortKey: "responses" },
+          { label: "Criado em", sortKey: "createdAt" },
+          { label: "Atualizado em", sortKey: "updatedAt" },
+          { label: "Ações" },
         ]}
+        sortConfig={sortConfig}
+        onSort={handleSort}
         renderRow={(form) => (
           <>
             <TableCell
@@ -419,23 +474,11 @@ export default function FormsPage() {
                   onCheckedChange={() => toggleFormStatus(form.id)}
                   className="data-[state=checked]:bg-primary"
                 />
-                <div className="flex items-center gap-2">
-                  {form.status === "ACTIVE" ? (
-                    <Power className="h-4 w-4 text-primary" />
-                  ) : (
-                    <PowerOff className="h-4 w-4 text-muted-foreground" />
-                  )}
-                  <Badge
-                    variant={form.status === "ACTIVE" ? "default" : "secondary"}
-                    className={
-                      form.status === "ACTIVE"
-                        ? "bg-primary hover:bg-green-600"
-                        : ""
-                    }
-                  >
-                    {form.status === "ACTIVE" ? "Ativo" : "Inativo"}
-                  </Badge>
-                </div>
+                {form.status === "ACTIVE" ? (
+                  <Power className="h-4 w-4 text-primary" />
+                ) : (
+                  <PowerOff className="h-4 w-4 text-muted-foreground" />
+                )}
               </div>
             </TableCell>
             <TableCell onClick={(e) => e.stopPropagation()}>

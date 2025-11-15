@@ -13,9 +13,21 @@ export interface EmptyStateConfig {
   action?: React.ReactNode;
 }
 
+export type SortDirection = "asc" | "desc" | null;
+
+export interface SortConfig {
+  key: string | null;
+  direction: SortDirection;
+}
+
+export interface HeaderConfig {
+  label: string;
+  sortKey?: string;
+}
+
 export interface DataTableProps<TData> {
   data: TData[];
-  headers: string[];
+  headers: string[] | HeaderConfig[];
   renderRow: (item: TData) => React.ReactNode;
   isLoading?: boolean;
   error?: string | null;
@@ -23,4 +35,6 @@ export interface DataTableProps<TData> {
   pagination?: PaginationConfig;
   cardTitle?: string;
   cardDescription?: string;
+  sortConfig?: SortConfig;
+  onSort?: (key: string) => void;
 }

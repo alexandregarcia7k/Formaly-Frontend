@@ -18,7 +18,7 @@ export function SearchInput({ label, placeholder = "Buscar...", value, onChange,
     <div className="flex flex-col gap-2 flex-1 max-w-sm">
       {label && <Label className="text-xs font-medium text-muted-foreground">{label}</Label>}
       <div className="relative">
-        <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground pointer-events-none" />
+        <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-primary pointer-events-none" />
         <Input
           ref={inputRef}
           placeholder={placeholder}

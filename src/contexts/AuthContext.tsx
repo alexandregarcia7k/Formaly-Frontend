@@ -32,9 +32,16 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       await mockDelay(300); // Simular delay de API
 
       if (typeof window !== "undefined") {
-        const storedUser = localStorage.getItem("mock-user");
-        if (storedUser) {
-          setUser(JSON.parse(storedUser));
+        try {
+          const storedUser = localStorage.getItem("mock-user");
+          if (storedUser) {
+            const parsedUser = JSON.parse(storedUser);
+            setUser(parsedUser);
+          }
+        } catch (error) {
+          // Dados corrompidos no localStorage - limpar
+          localStorage.removeItem("mock-user");
+          console.error("Erro ao carregar usuário:", error);
         }
       }
       setIsLoading(false);
@@ -77,9 +84,17 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const refreshUser = async () => {
     await mockDelay(300);
     if (typeof window !== "undefined") {
-      const storedUser = localStorage.getItem("mock-user");
-      if (storedUser) {
-        setUser(JSON.parse(storedUser));
+      try {
+        const storedUser = localStorage.getItem("mock-user");
+        if (storedUser) {
+          const parsedUser = JSON.parse(storedUser);
+          setUser(parsedUser);
+        }
+      } catch (error) {
+        // Dados corrompidos - limpar e resetar
+        localStorage.removeItem("mock-user");
+        setUser(null);
+        console.error("Erro ao atualizar usuário:", error);
       }
     }
   };
