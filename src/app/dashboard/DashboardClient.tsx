@@ -4,7 +4,7 @@ import { useCallback } from "react";
 import { useRouter } from "next/navigation";
 import { formatDistanceToNow } from "date-fns";
 import { ptBR } from "date-fns/locale";
-import { ArrowRight, BarChart3, CheckCircle2, FileCheck, FileText, MessageSquare, TrendingUp } from "lucide-react";
+import { ArrowRight, BarChart3, FileText, MessageSquare } from "lucide-react";
 import { Bar, BarChart, CartesianGrid, XAxis } from "recharts";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -15,74 +15,36 @@ import { ActivityTimeline } from "@/components/dashboard/ActivityTimeline";
 import { QuickActionCard } from "@/components/dashboard/QuickActionCard";
 import { DataTable } from "@/components/datatable";
 
-// TODO: Substituir por API real
-const mockStats = [
-  {
-    title: "Total de Formulários",
-    value: 124,
-    trend: { value: "+12.5%", isPositive: true },
-    description: "Crescimento este mês",
-    footer: "Novos formulários criados",
-  },
-  {
-    title: "Respostas Recebidas",
-    value: "8,234",
-    trend: { value: "+18%", isPositive: true },
-    description: "Alta nos últimos 7 dias",
-    footer: "Taxa de resposta aumentou",
-  },
-  {
-    title: "Taxa de Conclusão",
-    value: "87.5%",
-    trend: { value: "+4.5%", isPositive: true },
-    description: "Aumento constante",
-    footer: "Meta alcançada",
-  },
-];
+interface DashboardStat {
+  title: string;
+  value: string | number;
+  trend: { value: string; isPositive: boolean };
+  description: string;
+  footer: string;
+}
 
-const mockActivities = [
-  {
-    id: "1",
-    type: "new_responses" as const,
-    message: "5 novas respostas em 'Pesquisa de Satisfação'",
-    timestamp: new Date(Date.now() - 1000 * 60 * 30),
-    icon: MessageSquare,
-  },
-  {
-    id: "2",
-    type: "form_published" as const,
-    message: "Formulário 'Feedback do Cliente' foi publicado",
-    timestamp: new Date(Date.now() - 1000 * 60 * 60 * 2),
-    icon: CheckCircle2,
-  },
-  {
-    id: "3",
-    type: "daily_responses" as const,
-    message: "23 respostas recebidas hoje",
-    timestamp: new Date(Date.now() - 1000 * 60 * 60 * 5),
-    icon: TrendingUp,
-  },
-  {
-    id: "4",
-    type: "new_responses" as const,
-    message: "12 novas respostas em 'Cadastro de Eventos'",
-    timestamp: new Date(Date.now() - 1000 * 60 * 60 * 24),
-    icon: MessageSquare,
-  },
-  {
-    id: "5",
-    type: "form_published" as const,
-    message: "Formulário 'Avaliação de Produto' foi publicado",
-    timestamp: new Date(Date.now() - 1000 * 60 * 60 * 48),
-    icon: FileCheck,
-  },
-];
+interface Activity {
+  id: string;
+  type: "new_responses" | "form_published" | "daily_responses";
+  message: string;
+  timestamp: Date;
+  icon: any;
+}
 
-const mockChartData = Array.from({ length: 30 }, (_, i) => ({
-  date: `${String(i + 1).padStart(2, "0")}/01`,
-  desktop: Math.floor(Math.random() * 300) + 100,
-  mobile: Math.floor(Math.random() * 200) + 50,
-}));
+interface ChartData {
+  date: string;
+  desktop: number;
+  mobile: number;
+}
+
+// TODO: Buscar da API GET /dashboard/stats
+const stats: DashboardStat[] = [];
+
+// TODO: Buscar da API GET /dashboard/activities?limit=5
+const activities: Activity[] = [];
+
+// TODO: Buscar da API GET /dashboard/responses-over-time?period=30d
+const chartData: ChartData[] = [];
 
 const chartConfig = {
   desktop: {
@@ -105,97 +67,14 @@ interface LatestResponse {
   submittedAt: Date;
 }
 
-const mockLatestResponses: LatestResponse[] = [
-  {
-    id: "resp-1",
-    formId: "form-123",
-    formName: "Pesquisa de Satisfação 2024",
-    respondentName: "João Silva",
-    respondentEmail: "joao@email.com",
-    status: "COMPLETE",
-    submittedAt: new Date(Date.now() - 1000 * 60 * 30),
-  },
-  {
-    id: "resp-2",
-    formId: "form-456",
-    formName: "Cadastro de Clientes",
-    respondentEmail: "maria@email.com",
-    status: "COMPLETE",
-    submittedAt: new Date(Date.now() - 1000 * 60 * 60 * 2),
-  },
-  {
-    id: "resp-3",
-    formId: "form-789",
-    formName: "Feedback de Produto",
-    respondentName: "Pedro Santos",
-    status: "INCOMPLETE",
-    submittedAt: new Date(Date.now() - 1000 * 60 * 60 * 5),
-  },
-  {
-    id: "resp-4",
-    formId: "form-123",
-    formName: "Pesquisa de Satisfação 2024",
-    respondentName: "Ana Costa",
-    respondentEmail: "ana@email.com",
-    status: "COMPLETE",
-    submittedAt: new Date(Date.now() - 1000 * 60 * 60 * 8),
-  },
-  {
-    id: "resp-5",
-    formId: "form-456",
-    formName: "Cadastro de Clientes",
-    respondentEmail: "carlos@email.com",
-    status: "COMPLETE",
-    submittedAt: new Date(Date.now() - 1000 * 60 * 60 * 12),
-  },
-  {
-    id: "resp-6",
-    formId: "form-789",
-    formName: "Feedback de Produto",
-    respondentName: "Lucia Mendes",
-    status: "COMPLETE",
-    submittedAt: new Date(Date.now() - 1000 * 60 * 60 * 18),
-  },
-  {
-    id: "resp-7",
-    formId: "form-123",
-    formName: "Pesquisa de Satisfação 2024",
-    respondentEmail: "roberto@email.com",
-    status: "INCOMPLETE",
-    submittedAt: new Date(Date.now() - 1000 * 60 * 60 * 24),
-  },
-  {
-    id: "resp-8",
-    formId: "form-456",
-    formName: "Cadastro de Clientes",
-    respondentName: "Fernanda Lima",
-    respondentEmail: "fernanda@email.com",
-    status: "COMPLETE",
-    submittedAt: new Date(Date.now() - 1000 * 60 * 60 * 30),
-  },
-  {
-    id: "resp-9",
-    formId: "form-789",
-    formName: "Feedback de Produto",
-    respondentName: "Ricardo Alves",
-    status: "COMPLETE",
-    submittedAt: new Date(Date.now() - 1000 * 60 * 60 * 36),
-  },
-  {
-    id: "resp-10",
-    formId: "form-123",
-    formName: "Pesquisa de Satisfação 2024",
-    respondentEmail: "juliana@email.com",
-    status: "COMPLETE",
-    submittedAt: new Date(Date.now() - 1000 * 60 * 60 * 48),
-  },
-];
+// TODO: Buscar da API GET /dashboard/latest-responses?limit=10
+const latestResponses: LatestResponse[] = [];
 
 export function DashboardClient() {
   const router = useRouter();
   
-  // TODO: Substituir por dados reais do usuário autenticado
-  const userName = "João";
+  // TODO: Buscar da API GET /auth/me
+  const userName = "Usuário";
 
   // React Compiler otimiza automaticamente - useMemo desnecessário para dados estáticos
   const quickActions = [
@@ -294,7 +173,7 @@ export function DashboardClient() {
 
       {/* Stats Cards - 3 horizontal */}
       <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-        {mockStats.map((stat) => (
+        {stats.map((stat) => (
           <Card key={stat.title} className="py-4">
             <CardHeader className="pb-3">
               <CardDescription className="text-xs uppercase tracking-wide">
@@ -324,7 +203,7 @@ export function DashboardClient() {
 
       {/* Timeline + Chart */}
       <div className="grid gap-6 lg:grid-cols-[380px_1fr]">
-        <ActivityTimeline activities={mockActivities} />
+        <ActivityTimeline activities={activities} />
 
         <Card className="py-4">
           <CardHeader className="pb-3">
@@ -333,7 +212,7 @@ export function DashboardClient() {
           </CardHeader>
           <CardContent className="pt-0">
             <ChartContainer config={chartConfig} className="h-[240px] w-full">
-              <BarChart data={mockChartData}>
+              <BarChart data={chartData}>
                 <CartesianGrid vertical={false} />
                 <XAxis
                   dataKey="date"
@@ -352,7 +231,7 @@ export function DashboardClient() {
 
       {/* Latest Responses */}
       <DataTable
-        data={mockLatestResponses}
+        data={latestResponses}
         headers={["Formulário", "Respondente", "Status", "Respondido em", "Ações"]}
         renderRow={renderRow}
         cardTitle="Últimas Respostas"

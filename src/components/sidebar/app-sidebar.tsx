@@ -2,7 +2,7 @@
 
 import * as React from "react";
 import Link from "next/link";
-import { MOCK_USER } from "@/lib/mock-data";
+import { useAuth } from "@/contexts/AuthContext";
 
 // 🎯 ATENÇÃO: Para modificar links da sidebar, edite o arquivo:
 // src/config/sidebar.config.ts
@@ -26,11 +26,13 @@ import { Logo } from "@/components/landing/logo";
 type AppSidebarProps = React.ComponentProps<typeof Sidebar>;
 
 export function AppSidebar({ ...props }: AppSidebarProps) {
-  // Dados mockados para desenvolvimento
+  const { user: authUser } = useAuth();
+
+  // TODO: Buscar dados do usuário da API GET /auth/me
   const user = {
-    name: MOCK_USER.name,
-    email: MOCK_USER.email,
-    avatar: MOCK_USER.image || "",
+    name: authUser?.name || "Usuário",
+    email: authUser?.email || "usuario@email.com",
+    avatar: authUser?.image || "",
   };
 
   return (

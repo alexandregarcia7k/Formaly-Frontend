@@ -88,6 +88,10 @@ mcp.json
 # Context folder
 contexto/
 
+# Documentation files (except README.md)
+*.md
+!README.md
+
 # Logs
 logs
 *.log

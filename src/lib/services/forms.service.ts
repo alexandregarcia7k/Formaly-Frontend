@@ -1,5 +1,3 @@
-// Mock Forms Service - Substitui todas as chamadas de API por dados mockados
-import { MOCK_FORMS, MOCK_USER, mockDelay } from "@/lib/mock-data";
 import { FormField } from "@/components/form-builder";
 
 // ===== INTERFACES =====
@@ -74,170 +72,57 @@ export interface FormsListResponse {
   };
 }
 
-// ===== MOCK SERVICE =====
-
-// Estado local mutável para simular persistência durante a sessão
-const mockForms = [...MOCK_FORMS];
+// TODO: Implementar chamadas reais de API
 export class FormsService {
   /**
-   * Cria um novo formulário (MOCK)
+   * Cria um novo formulário
+   * TODO: POST /forms
    */
   static async createForm(data: CreateFormDTO): Promise<FormResponse> {
-    await mockDelay(500);
-
-    const newForm: FormResponse = {
-      id: `form-${Date.now()}`,
-      userId: MOCK_USER.id,
-      name: data.name,
-      description: data.description || null,
-      status: "ACTIVE",
-      maxResponses: data.maxResponses || null,
-      expiresAt: data.expiresAt?.toISOString() || null,
-      allowMultipleSubmissions: data.allowMultipleSubmissions ?? false,
-      successMessage: data.successMessage || null,
-      createdAt: new Date().toISOString(),
-      updatedAt: new Date().toISOString(),
-      fields: data.fields.map((field, index) => ({
-        id: `field-${Date.now()}-${index}`,
-        formId: `form-${Date.now()}`,
-        type: field.type,
-        label: field.label,
-        name: field.name,
-        required: field.required,
-        config: field.config || null,
-      })),
-      _count: {
-        submissions: 0,
-      },
-    };
-
-    mockForms.unshift(newForm); // Adicionar no início (mais recente)
-    return newForm;
+    throw new Error("Not implemented - POST /forms");
   }
 
   /**
-   * Lista formulários do usuário (paginado) (MOCK)
+   * Lista formulários do usuário (paginado)
+   * TODO: GET /forms?page={page}
    */
   static async listForms(page: number = 1): Promise<FormsListResponse> {
-    await mockDelay(400);
-
-    const limit = 10;
-    const total = mockForms.length;
-    const totalPages = Math.ceil(total / limit);
-    const start = (page - 1) * limit;
-    const end = start + limit;
-
-    return {
-      data: mockForms.slice(start, end),
-      pagination: {
-        page,
-        limit,
-        total,
-        totalPages,
-      },
-    };
+    throw new Error("Not implemented - GET /forms");
   }
 
   /**
-   * Busca um formulário específico (MOCK)
+   * Busca um formulário específico
+   * TODO: GET /forms/:id
    */
   static async getForm(id: string): Promise<FormResponse> {
-    await mockDelay(300);
-
-    const form = mockForms.find((f) => f.id === id);
-    if (!form) {
-      throw new Error("Formulário não encontrado");
-    }
-    return form;
+    throw new Error("Not implemented - GET /forms/:id");
   }
 
   /**
-   * Atualiza um formulário existente (MOCK)
+   * Atualiza um formulário existente
+   * TODO: PUT /forms/:id
    */
   static async updateForm(
     id: string,
     data: UpdateFormDTO
   ): Promise<FormResponse> {
-    await mockDelay(400);
-
-    const formIndex = mockForms.findIndex((f) => f.id === id);
-    if (formIndex === -1) {
-      throw new Error("Formulário não encontrado");
-    }
-
-    const updatedForm = {
-      ...mockForms[formIndex],
-      name: data.name ?? mockForms[formIndex].name,
-      description: data.description ?? mockForms[formIndex].description,
-      status: data.status ?? mockForms[formIndex].status,
-      maxResponses: data.maxResponses ?? mockForms[formIndex].maxResponses,
-      expiresAt: data.expiresAt
-        ? data.expiresAt.toISOString()
-        : mockForms[formIndex].expiresAt,
-      allowMultipleSubmissions:
-        data.allowMultipleSubmissions ??
-        mockForms[formIndex].allowMultipleSubmissions,
-      successMessage: data.successMessage ?? mockForms[formIndex].successMessage,
-      updatedAt: new Date().toISOString(),
-      fields:
-        data.fields?.map((field, index) => ({
-          id: `field-${Date.now()}-${index}`,
-          formId: id,
-          type: field.type,
-          label: field.label,
-          name: field.name,
-          required: field.required,
-          config: field.config || null,
-        })) || mockForms[formIndex].fields,
-    };
-
-    mockForms[formIndex] = updatedForm;
-    return updatedForm;
+    throw new Error("Not implemented - PUT /forms/:id");
   }
 
   /**
-   * Deleta um formulário (MOCK)
+   * Deleta um formulário
+   * TODO: DELETE /forms/:id
    */
   static async deleteForm(id: string): Promise<void> {
-    await mockDelay(300);
-
-    const formIndex = mockForms.findIndex((f) => f.id === id);
-    if (formIndex === -1) {
-      throw new Error("Formulário não encontrado");
-    }
-
-    mockForms.splice(formIndex, 1);
+    throw new Error("Not implemented - DELETE /forms/:id");
   }
 
   /**
-   * Clona um formulário existente (MOCK)
+   * Clona um formulário existente
+   * TODO: POST /forms/:id/clone
    */
   static async cloneForm(id: string): Promise<FormResponse> {
-    await mockDelay(500);
-
-    const original = mockForms.find((f) => f.id === id);
-    if (!original) {
-      throw new Error("Formulário não encontrado");
-    }
-
-    const clonedForm: FormResponse = {
-      ...original,
-      id: `form-${Date.now()}`,
-      name: `${original.name} (Cópia)`,
-      createdAt: new Date().toISOString(),
-      updatedAt: new Date().toISOString(),
-      fields: original.fields.map((field, index) => ({
-        ...field,
-        id: `field-${Date.now()}-${index}`,
-        formId: `form-${Date.now()}`,
-      })),
-      _count: {
-        submissions: 0,
-      },
-    };
-
-    mockForms.unshift(clonedForm);
-    return clonedForm;
+    throw new Error("Not implemented - POST /forms/:id/clone");
   }
 
   /**

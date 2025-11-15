@@ -56,113 +56,26 @@ export function ResponsesClient({ searchParams }: ResponsesClientProps) {
   const [isDetailsOpen, setIsDetailsOpen] = useState(false);
   const [hasInitialized, setHasInitialized] = useState(false);
 
-  // Mock forms - substituir por dados reais da API
-  const mockForms = useMemo(() => [
-    { id: "form-123", name: "Pesquisa de Satisfação 2024" },
-    { id: "form-456", name: "Cadastro de Clientes" },
-    { id: "form-789", name: "Feedback de Produto" },
-  ], []);
+  // TODO: Buscar da API GET /forms (apenas id e name para filtro)
+  const forms: Array<{ id: string; name: string }> = [];
 
-  // Mock data - substituir por dados reais da API
-  const mockResponses = useMemo<ResponseData[]>(() => [
-    {
-      id: "resp-1",
-      formId: "form-123",
-      formName: "Pesquisa de Satisfação 2024",
-      respondentName: "João Silva",
-      respondentEmail: "joao@email.com",
-      status: "COMPLETE",
-      submittedAt: new Date("2024-01-15T14:30:00"),
-      updatedAt: new Date("2024-01-15T14:30:00"),
-      data: {
-        "field-1": "João Silva",
-        "field-2": "joao@email.com",
-        "field-3": "Muito satisfeito com o atendimento",
-        "field-4": "5",
-      },
-      device: "desktop",
-      userAgent: "Chrome 120.0.0 (Windows)",
-    },
-    {
-      id: "resp-2",
-      formId: "form-456",
-      formName: "Cadastro de Clientes",
-      respondentEmail: "maria@email.com",
-      status: "COMPLETE",
-      submittedAt: new Date("2024-01-14T10:15:00"),
-      updatedAt: new Date("2024-01-14T10:20:00"),
-      data: {
-        "field-1": "Maria Santos",
-        "field-2": "maria@email.com",
-        "field-3": "(11) 98765-4321",
-      },
-      device: "mobile",
-      userAgent: "Safari 17.0 (iOS)",
-    },
-    {
-      id: "resp-3",
-      formId: "form-123",
-      formName: "Pesquisa de Satisfação 2024",
-      respondentName: "Pedro Santos",
-      status: "INCOMPLETE",
-      submittedAt: new Date("2024-01-13T16:45:00"),
-      updatedAt: new Date("2024-01-13T16:50:00"),
-      data: {
-        "field-1": "Pedro Santos",
-        "field-2": "",
-      },
-      device: "desktop",
-      userAgent: "Firefox 121.0 (Linux)",
-    },
-  ], []);
+  // TODO: Buscar da API GET /responses?formId={formFilter}&status={statusFilter}&search={search}
+  const responses: ResponseData[] = [];
 
-  // Mock form fields
-  const mockFormFields = useMemo<FormField[]>(() => [
-    { id: "field-1", type: "text", label: "Nome Completo", placeholder: "Digite seu nome", required: true },
-    { id: "field-2", type: "email", label: "Email", placeholder: "seu@email.com", required: true },
-    { id: "field-3", type: "textarea", label: "Comentários", placeholder: "Deixe seu comentário", required: false },
-    { id: "field-4", type: "select", label: "Avaliação", placeholder: "Selecione", required: false, options: ["1", "2", "3", "4", "5"] },
-  ], []);
+  // TODO: Buscar da API GET /forms/:id/fields quando abrir modal de detalhes
+  const formFields: FormField[] = [];
 
-  const stats = useMemo(() => [
-    {
-      title: "Total de Respostas",
-      value: "1.247",
-      trend: { value: "+12.5%", isPositive: true },
-      description: "Total acumulado",
-      footer: "Desde a criação do formulário",
-    },
-    {
-      title: "Respostas Hoje",
-      value: 42,
-      trend: { value: "+8", isPositive: true },
-      description: "Recebidas hoje",
-      footer: "Últimas 24 horas",
-    },
-    {
-      title: "Dispositivos Mobile",
-      value: "68%",
-      trend: { value: "+5%", isPositive: true },
-      description: "Respostas via mobile",
-      footer: "32% desktop",
-    },
-    {
-      title: "Taxa de Abandono",
-      value: "12.7%",
-      trend: { value: "-3.1%", isPositive: true },
-      description: "Formulários não concluídos",
-      footer: "Iniciados mas não enviados",
-    },
-  ], []);
+  // TODO: Buscar da API GET /dashboard/stats (ou endpoint específico de responses)
+  const stats: any[] = [];
 
   // Função memoizada para abrir modal
   const openModal = useCallback((responseId: string) => {
-    const response = mockResponses.find((r) => r.id === responseId);
+    const response = responses.find((r) => r.id === responseId);
     if (response) {
       setSelectedResponse(response);
       setIsDetailsOpen(true);
     }
-  }, [mockResponses]);
+  }, [responses]);
 
   const handleViewDetails = useCallback((responseId: string) => {
     openModal(responseId);
@@ -194,7 +107,7 @@ export function ResponsesClient({ searchParams }: ResponsesClientProps) {
 
   // Filtrar e ordenar respostas
   const filteredAndSortedResponses = useMemo(() => {
-    let filtered = mockResponses.filter((response) => {
+    let filtered = responses.filter((response) => {
       const matchSearch = 
         response.formName.toLowerCase().includes(search.toLowerCase()) ||
         response.respondentName?.toLowerCase().includes(search.toLowerCase()) ||
@@ -250,7 +163,7 @@ export function ResponsesClient({ searchParams }: ResponsesClientProps) {
     }
 
     return filtered;
-  }, [mockResponses, search, statusFilter, formFilter, sortConfig]);
+  }, [responses, search, statusFilter, formFilter, sortConfig]);
 
   const handleSort = useCallback((key: string) => {
     setSortConfig((current) => {
@@ -289,10 +202,10 @@ export function ResponsesClient({ searchParams }: ResponsesClientProps) {
             label="Formulário"
             options={[
               { value: "all", label: "Todos os formulários" },
-              ...mockForms.map((form) => ({
+              ...forms.map((form) => ({
                 value: form.id,
                 label: form.name,
-              })),
+              }))
             ]}
             value={formFilter}
             onChange={setFormFilter}
@@ -322,7 +235,7 @@ export function ResponsesClient({ searchParams }: ResponsesClientProps) {
             }}
             disabled={search === "" && formFilter === "all" && statusFilter === "all" && !dateRange.from}
           />
-          <ResultsCount total={mockResponses.length} filtered={filteredAndSortedResponses.length} />
+          <ResultsCount total={responses.length} filtered={filteredAndSortedResponses.length} />
         </FilterBar>
       </div>
 
@@ -433,7 +346,7 @@ export function ResponsesClient({ searchParams }: ResponsesClientProps) {
 
       <ResponseDetailsDialog
         response={selectedResponse}
-        formFields={mockFormFields}
+        formFields={formFields}
         isOpen={isDetailsOpen}
         onClose={handleCloseModal}
         onSave={handleSaveResponse}
