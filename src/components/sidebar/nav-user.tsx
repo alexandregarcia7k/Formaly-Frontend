@@ -7,7 +7,7 @@ import {
   IconNotification,
   IconUserCircle,
 } from "@tabler/icons-react";
-import { useRouter } from "next/navigation";
+import { signOut } from "next-auth/react";
 
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import {
@@ -36,10 +36,9 @@ export function NavUser({
   };
 }) {
   const { isMobile } = useSidebar();
-  const router = useRouter();
 
-  const handleLogout = () => {
-    router.push("/login");
+  const handleLogout = async () => {
+    await signOut({ callbackUrl: "/login" });
   };
 
   return (

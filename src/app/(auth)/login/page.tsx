@@ -8,14 +8,85 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { ThemeSwitcher } from "@/components/shared/theme-switcher";
 import { SocialLoginButtons } from "@/components/auth/social-login-buttons";
 import Link from "next/link";
+import { toast } from "sonner";
+import { useState } from "react";
+import { AuthService } from "@/lib/services/auth.service";
 import { useRouter } from "next/navigation";
+import { signIn } from "next-auth/react";
+import { loginSchema, registerSchema } from "@/schemas";
 
 export default function LoginPage() {
   const router = useRouter();
+  const [isLoading, setIsLoading] = useState(false);
 
-  const handleLogin = (e: React.FormEvent) => {
+  const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
-    router.push("/dashboard");
+    const formData = new FormData(e.currentTarget as HTMLFormElement);
+    
+    const data = {
+      email: formData.get("email") as string,
+      password: formData.get("password") as string,
+    };
+
+    const validation = loginSchema.safeParse(data);
+    if (!validation.success) {
+      toast.error(validation.error.errors[0].message);
+      return;
+    }
+    
+    setIsLoading(true);
+    try {
+      const result = await signIn("credentials", {
+        email: validation.data.email,
+        password: validation.data.password,
+        redirect: false,
+      });
+
+      if (result?.error) {
+        toast.error("Email ou senha inválidos");
+        return;
+      }
+
+      toast.success("Login realizado com sucesso!");
+      router.push("/dashboard");
+    } catch {
+      toast.error("Erro ao fazer login");
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const handleRegister = async (e: React.FormEvent) => {
+    e.preventDefault();
+    const formData = new FormData(e.currentTarget as HTMLFormElement);
+    
+    const data = {
+      name: formData.get("name") as string,
+      email: formData.get("email") as string,
+      password: formData.get("password") as string,
+      confirmPassword: formData.get("confirmPassword") as string,
+    };
+
+    const validation = registerSchema.safeParse(data);
+    if (!validation.success) {
+      toast.error(validation.error.errors[0].message);
+      return;
+    }
+    
+    setIsLoading(true);
+    try {
+      await AuthService.register({
+        name: validation.data.name,
+        email: validation.data.email,
+        password: validation.data.password,
+      });
+      toast.success("Cadastro realizado com sucesso!");
+      window.location.href = "/dashboard";
+    } catch (error) {
+      toast.error(error instanceof Error ? error.message : "Erro ao fazer cadastro");
+    } finally {
+      setIsLoading(false);
+    }
   };
   return (
     <section className="flex min-h-screen items-center justify-center bg-background px-4 py-16">
@@ -87,15 +158,15 @@ export default function LoginPage() {
                   />
                 </div>
 
-                <Button className="h-12 w-full text-base font-semibold">
-                  Entrar
+                <Button className="h-12 w-full text-base font-semibold" disabled={isLoading}>
+                  {isLoading ? "Entrando..." : "Entrar"}
                 </Button>
               </div>
             </form>
           </TabsContent>
 
           <TabsContent value="register" className="mt-6">
-            <form onSubmit={handleLogin} className="space-y-6">
+            <form onSubmit={handleRegister} className="space-y-6">
               <SocialLoginButtons />
 
               <div className="relative">
@@ -161,9 +232,59 @@ export default function LoginPage() {
                   />
                 </div>
 
-                <Button className="h-12 w-full text-base font-semibold">
-                  Criar conta
+                <div className="space-y-2">
+                  <Label
+                    htmlFor="register-confirm-password"
+                    className="text-base font-medium"
+                  >
+                    Confirmar senha
+                  </Label>
+                  <Input
+                    type="password"
+                    required
+                    name="confirmPassword"
+                    id="register-confirm-password"
+                    placeholder="••••••••"
+                    className="h-12 text-base"
+                  />
+                </div>
+
+                <div className="flex items-start space-x-2">
+                  <input
+                    type="checkbox"
+                    required
+                    id="terms"
+                    className="mt-1 h-4 w-4 rounded border-gray-300"
+                  />
+                  <Label htmlFor="terms" className="text-sm leading-relaxed">
+                    Aceito os{" "}
+                    <Link href="/terms" className="text-primary hover:underline">
+                      termos de uso
+                    </Link>{" "}
+                    e{" "}
+                    <Link href="/privacy" className="text-primary hover:underline">
+                      política de privacidade
+                    </Link>
+                  </Label>
+                </div>
+
+                <Button className="h-12 w-full text-base font-semibold" disabled={isLoading}>
+                  {isLoading ? "Criando conta..." : "Criar conta"}
                 </Button>
+
+                <p className="text-center text-sm text-muted-foreground">
+                  Já tem uma conta?{" "}
+                  <button
+                    type="button"
+                    onClick={() => {
+                      const loginTab = document.querySelector('[value="login"]') as HTMLElement;
+                      loginTab?.click();
+                    }}
+                    className="text-primary hover:underline font-medium"
+                  >
+                    Entrar
+                  </button>
+                </p>
               </div>
             </form>
           </TabsContent>

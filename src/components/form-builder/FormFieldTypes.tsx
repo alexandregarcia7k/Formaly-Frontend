@@ -13,20 +13,7 @@ import {
   Hash,
   FileUp,
 } from "lucide-react";
-
-export type FieldType =
-  | "text"
-  | "email"
-  | "number"
-  | "textarea"
-  | "select"
-  | "radio"
-  | "checkbox"
-  | "date"
-  | "time"
-  | "datetime"
-  | "url"
-  | "tel";
+import { FieldType } from "@/types/field-types";
 
 export interface FieldTypeConfig {
   type: FieldType;
@@ -50,7 +37,7 @@ export const FIELD_TYPES: FieldTypeConfig[] = [
     icon: Mail,
   },
   {
-    type: "tel",
+    type: "phone",
     label: "Telefone",
     description: "Campo de telefone",
     icon: Phone,
@@ -92,22 +79,10 @@ export const FIELD_TYPES: FieldTypeConfig[] = [
     icon: Calendar,
   },
   {
-    type: "url",
-    label: "URL",
-    description: "Campo de URL com validação",
-    icon: Type,
-  },
-  {
-    type: "time",
-    label: "Hora",
-    description: "Seletor de hora",
-    icon: Calendar,
-  },
-  {
-    type: "datetime",
-    label: "Data e Hora",
-    description: "Seletor de data e hora",
-    icon: Calendar,
+    type: "file",
+    label: "Arquivo",
+    description: "Upload de arquivo",
+    icon: FileUp,
   },
 ];
 

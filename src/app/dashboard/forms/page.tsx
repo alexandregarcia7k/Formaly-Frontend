@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useMemo, useRef } from "react";
+import { useState, useEffect, useRef, useOptimistic, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import type { SortConfig } from "@/components/datatable/types";
 import {
@@ -46,7 +46,12 @@ import { formatDate, formatDateTime } from "@/lib/utils";
 
 export default function FormsPage() {
   const router = useRouter();
-  const [forms, setForms] = useState<FormResponse[]>([]);
+  const [forms, setForms] = useState<Omit<FormResponse, 'fields'>[]>([]);
+  const [optimisticForms, setOptimisticDelete] = useOptimistic(
+    forms,
+    (state, deletedId: string) => state.filter((f) => f.id !== deletedId)
+  );
+  const [isPending, startTransition] = useTransition();
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [currentPage, setCurrentPage] = useState(1);
@@ -181,21 +186,20 @@ export default function FormsPage() {
   const handleDeleteForm = async () => {
     if (!deleteFormId) return;
 
-    setIsDeleting(true);
+    const formToDelete = deleteFormId;
+    setDeleteFormId(null);
 
-    try {
-      await FormsService.deleteForm(deleteFormId);
-
-      // Remover da lista local
-      setForms((prevForms) => prevForms.filter((f) => f.id !== deleteFormId));
-
-      toast.success("Formulário deletado com sucesso");
-    } catch (error) {
-      toast.error("Erro ao deletar formulário");
-    } finally {
-      setIsDeleting(false);
-      setDeleteFormId(null);
-    }
+    startTransition(async () => {
+      setOptimisticDelete(formToDelete);
+      
+      try {
+        await FormsService.deleteForm(formToDelete);
+        setForms((prevForms) => prevForms.filter((f) => f.id !== formToDelete));
+        toast.success("Formulário deletado com sucesso");
+      } catch (error) {
+        toast.error("Erro ao deletar formulário");
+      }
+    });
   };
 
   const handleCopyLink = (formId: string) => {
@@ -207,8 +211,9 @@ export default function FormsPage() {
   };
 
   // Filtrar e ordenar formulários
-  const filteredAndSortedForms = useMemo(() => {
-    let filtered = forms.filter((form) => {
+  // React 19 Compiler otimiza automaticamente - useMemo não necessário
+  const getFilteredAndSortedForms = () => {
+    let filtered = optimisticForms.filter((form) => {
       const matchSearch = 
         form.name.toLowerCase().includes(debouncedSearch.toLowerCase()) ||
         (form.description?.toLowerCase().includes(debouncedSearch.toLowerCase()) ?? false);
@@ -219,8 +224,8 @@ export default function FormsPage() {
       
       const matchResponses = 
         responsesFilter === FORM_RESPONSES_FILTER.ALL ||
-        (responsesFilter === FORM_RESPONSES_FILTER.WITH && form._count.submissions > 0) ||
-        (responsesFilter === FORM_RESPONSES_FILTER.WITHOUT && form._count.submissions === 0);
+        (responsesFilter === FORM_RESPONSES_FILTER.WITH && form.totalResponses > 0) ||
+        (responsesFilter === FORM_RESPONSES_FILTER.WITHOUT && form.totalResponses === 0);
       
       const matchDate = 
         !dateRange.from ||
@@ -254,8 +259,8 @@ export default function FormsPage() {
             bValue = b.status;
             break;
           case "responses":
-            aValue = a._count.submissions;
-            bValue = b._count.submissions;
+            aValue = a.totalResponses;
+            bValue = b.totalResponses;
             break;
           case "createdAt":
             aValue = new Date(a.createdAt).getTime();
@@ -276,7 +281,9 @@ export default function FormsPage() {
     }
 
     return filtered;
-  }, [forms, debouncedSearch, statusFilter, responsesFilter, dateRange, sortConfig]);
+  };
+  
+  const filteredAndSortedForms = getFilteredAndSortedForms();
 
   const handleSort = (key: string) => {
     setSortConfig((current) => {
@@ -288,18 +295,19 @@ export default function FormsPage() {
     });
   };
 
-  // Calcular estatísticas (memoizado para evitar recálculos desnecessários)
-  const stats = useMemo(() => {
+  // Calcular estatísticas
+  // React 19 Compiler otimiza automaticamente - useMemo não necessário
+  const getStats = () => {
     const totalForms = filteredAndSortedForms.length;
     const activeForms = filteredAndSortedForms.filter((f) => f.status === "ACTIVE").length;
     const totalResponses = filteredAndSortedForms.reduce(
-      (acc, f) => acc + f._count.submissions,
+      (acc, f) => acc + f.totalResponses,
       0
     );
     const avgResponses =
       totalForms > 0 ? Math.round(totalResponses / totalForms) : 0;
     const formsWithResponses = filteredAndSortedForms.filter(
-      (f) => f._count.submissions > 0
+      (f) => f.totalResponses > 0
     ).length;
     const conversionRate =
       totalForms > 0 ? Math.round((formsWithResponses / totalForms) * 100) : 0;
@@ -308,24 +316,24 @@ export default function FormsPage() {
       {
         title: "Total de Formulários",
         value: totalForms,
-        trend: { value: "+5%", isPositive: true },
+        trend: { value: "", isPositive: true },
         description: `${activeForms} ativos`,
         footer: `${totalForms - activeForms} inativos`,
       },
       {
         title: "Total de Respostas",
         value: totalResponses,
-        trend: { value: "+5%", isPositive: true },
+        trend: { value: "", isPositive: true },
         description: `Média de ${avgResponses} por formulário`,
         footer: "Respostas coletadas",
       },
       {
         title: "Formulário Mais Popular",
-        value: filteredAndSortedForms.length > 0 ? Math.max(...filteredAndSortedForms.map((f) => f._count.submissions), 0) : 0,
-        trend: { value: "+5%", isPositive: true },
+        value: filteredAndSortedForms.length > 0 ? Math.max(...filteredAndSortedForms.map((f) => f.totalResponses), 0) : 0,
+        trend: { value: "", isPositive: true },
         description:
           filteredAndSortedForms.length > 0
-            ? [...filteredAndSortedForms].sort((a, b) => b._count.submissions - a._count.submissions)[0]
+            ? [...filteredAndSortedForms].sort((a, b) => b.totalResponses - a.totalResponses)[0]
                 ?.name || "N/A"
             : "N/A",
         footer: "Maior número de respostas",
@@ -333,12 +341,14 @@ export default function FormsPage() {
       {
         title: "Taxa de Conversão",
         value: `${conversionRate}%`,
-        trend: { value: "+5%", isPositive: true },
+        trend: { value: "", isPositive: true },
         description: `${formsWithResponses} com respostas`,
         footer: "Formulários respondidos",
       },
     ];
-  }, [filteredAndSortedForms]);
+  };
+  
+  const stats = getStats();
 
   return (
     <div className="@container/main space-y-6">
@@ -502,7 +512,7 @@ export default function FormsPage() {
               </Button>
             </TableCell>
             <TableCell>
-              <span className="font-medium">{form._count.submissions}</span>
+              <span className="font-medium">{form.totalResponses}</span>
             </TableCell>
             <TableCell>
               <span className="text-sm text-muted-foreground">
@@ -624,9 +634,9 @@ export default function FormsPage() {
             <Button
               variant="destructive"
               onClick={handleDeleteForm}
-              disabled={isDeleting}
+        disabled={isPending}
             >
-              {isDeleting ? (
+              {isPending ? (
                 <>
                   <Loader2 className="mr-2 h-4 w-4 animate-spin" />
                   Deletando...

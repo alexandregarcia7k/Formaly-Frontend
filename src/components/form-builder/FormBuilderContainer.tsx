@@ -14,13 +14,12 @@ import {
   FIELD_TYPES,
   createNewField,
   type FormField,
-  type FieldType,
 } from "@/components/form-builder";
-import { useDragAndDrop } from "@/hooks/useDragAndDrop";
-import { FormsService } from "@/lib/services/forms.service";
+import { FieldType } from "@/types/field-types";
+import { useDragAndDrop, useFormMutations } from "@/hooks";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
-import { createFormSchema, updateFormSchema } from "@/schemas";
+import { createFormSchema, updateFormSchema, type Field } from "@/schemas";
 
 interface FormBuilderContainerProps {
   mode: "create" | "edit";
@@ -44,6 +43,8 @@ export function FormBuilderContainer({
   initialData,
 }: FormBuilderContainerProps) {
   const router = useRouter();
+  const { create, update, isCreating, isUpdating } = useFormMutations();
+  
   const [formName, setFormName] = useState(initialData?.name || "");
   const [formDescription, setFormDescription] = useState(
     initialData?.description || ""
@@ -56,7 +57,8 @@ export function FormBuilderContainer({
   const [activeTab, setActiveTab] = useState<
     "builder" | "preview" | "settings"
   >("builder");
-  const [isLoading, setIsLoading] = useState(false);
+  
+  const isLoading = isCreating || isUpdating;
 
   // Configurações avançadas
   const [expiresAt, setExpiresAt] = useState<Date | null>(
@@ -67,9 +69,6 @@ export function FormBuilderContainer({
   );
   const [allowMultipleSubmissions, setAllowMultipleSubmissions] = useState(
     initialData?.allowMultipleSubmissions ?? true
-  );
-  const [successMessage, setSuccessMessage] = useState(
-    initialData?.successMessage || ""
   );
   const [isActive, setIsActive] = useState(initialData?.isActive ?? true);
   const [isFieldModalOpen, setIsFieldModalOpen] = useState(false);
@@ -152,56 +151,57 @@ export function FormBuilderContainer({
   };
 
   const handleSave = async () => {
-    setIsLoading(true);
+    // Validar campos obrigatórios
+    if (!formName.trim()) {
+      toast.error("Nome do formulário é obrigatório");
+      return;
+    }
 
-    try {
-      // Validar com Zod
-      const formData = {
-        name: formName,
-        description: formDescription || null,
-        fields: FormsService.mapFieldsToBackend(selectedFields),
-        settings: {
-          hasPassword: !!formPassword,
-          password: formPassword || null,
-          successMessage: successMessage || null,
-          allowMultipleSubmissions,
-        },
-      };
+    if (selectedFields.length === 0) {
+      toast.error("Adicione pelo menos um campo ao formulário");
+      return;
+    }
 
-      const schema = mode === "edit" ? updateFormSchema : createFormSchema;
-      const result = schema.safeParse(formData);
+    // Mapear campos para formato do backend
+    const mappedFields: Field[] = selectedFields.map((field) => ({
+      type: field.type,
+      label: field.label,
+      name: field.name || field.label.toLowerCase().replace(/\s+/g, "_"),
+      placeholder: field.placeholder,
+      required: field.required,
+      config: field.config,
+    }));
 
-      if (!result.success) {
-        const firstError = result.error.errors[0];
-        toast.error(firstError.message);
-        return;
-      }
+    // Preparar dados
+    const formData = {
+      name: formName,
+      description: formDescription || undefined,
+      password: formPassword || undefined,
+      fields: mappedFields,
+      expiresAt: expiresAt || undefined,
+      maxResponses: maxResponses || undefined,
+      allowMultipleSubmissions,
+    };
 
-      // Após validação bem-sucedida, preparar dados para o service
-      const serviceData = {
-        name: formName,
-        description: formDescription || undefined,
-        password: formPassword || undefined,
-        fields: FormsService.mapFieldsToBackend(selectedFields),
-        expiresAt: expiresAt || undefined,
-        maxResponses: maxResponses || undefined,
-        allowMultipleSubmissions,
-        successMessage: successMessage || undefined,
-      };
+    // Validar com Zod
+    const schema = mode === "edit" ? updateFormSchema : createFormSchema;
+    const result = schema.safeParse(formData);
 
-      if (mode === "edit" && initialData?.id) {
-        await FormsService.updateForm(initialData.id, serviceData);
-        toast.success("Formulário atualizado com sucesso");
-        router.push("/dashboard/forms");
-      } else {
-        await FormsService.createForm(serviceData);
-        toast.success("Formulário criado com sucesso");
-        router.push("/dashboard/forms");
-      }
-    } catch (error) {
-      toast.error("Erro ao salvar formulário. Tente novamente.");
-    } finally {
-      setIsLoading(false);
+    if (!result.success) {
+      toast.error(result.error.errors[0].message);
+      return;
+    }
+
+    // Salvar
+    let savedForm;
+    if (mode === "edit" && initialData?.id) {
+      savedForm = await update(initialData.id, result.data as any);
+    } else {
+      savedForm = await create(result.data as any);
+    }
+
+    if (savedForm) {
+      router.push("/dashboard/forms");
     }
   };
 
@@ -339,8 +339,6 @@ export function FormBuilderContainer({
             setMaxResponses={setMaxResponses}
             allowMultipleSubmissions={allowMultipleSubmissions}
             setAllowMultipleSubmissions={setAllowMultipleSubmissions}
-            successMessage={successMessage}
-            setSuccessMessage={setSuccessMessage}
             isActive={isActive}
             setIsActive={setIsActive}
           />

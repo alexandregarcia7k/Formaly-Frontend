@@ -2,7 +2,7 @@
 
 import * as React from "react";
 import Link from "next/link";
-import { useAuth } from "@/contexts/AuthContext";
+import { useSession } from "next-auth/react";
 
 // 🎯 ATENÇÃO: Para modificar links da sidebar, edite o arquivo:
 // src/config/sidebar.config.ts
@@ -26,13 +26,12 @@ import { Logo } from "@/components/landing/logo";
 type AppSidebarProps = React.ComponentProps<typeof Sidebar>;
 
 export function AppSidebar({ ...props }: AppSidebarProps) {
-  const { user: authUser } = useAuth();
+  const { data: session } = useSession();
 
-  // TODO: Buscar dados do usuário da API GET /auth/me
   const user = {
-    name: authUser?.name || "Usuário",
-    email: authUser?.email || "usuario@email.com",
-    avatar: authUser?.image || "",
+    name: session?.user?.name || "Usuário",
+    email: session?.user?.email || "usuario@email.com",
+    avatar: session?.user?.image || "",
   };
 
   return (

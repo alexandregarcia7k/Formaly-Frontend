@@ -4,7 +4,7 @@ import { z } from "zod";
 export const uuidSchema = z.string().uuid();
 
 // Status do formulário
-export const formStatusSchema = z.enum(["ACTIVE", "INACTIVE", "DRAFT"]);
+export const formStatusSchema = z.enum(["ACTIVE", "INACTIVE"]);
 
 // Datas
 export const dateSchema = z.coerce.date();

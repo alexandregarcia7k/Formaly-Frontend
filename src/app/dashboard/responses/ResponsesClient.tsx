@@ -56,24 +56,89 @@ export function ResponsesClient({ searchParams }: ResponsesClientProps) {
   const [isDetailsOpen, setIsDetailsOpen] = useState(false);
   const [hasInitialized, setHasInitialized] = useState(false);
 
-  // TODO: Buscar da API GET /forms (apenas id e name para filtro)
-  const forms: Array<{ id: string; name: string }> = [];
+  const [forms, setForms] = useState<Array<{ id: string; name: string }>>([]);
+  const [responses, setResponses] = useState<ResponseData[]>([]);
+  const [formFields, setFormFields] = useState<FormField[]>([]);
+  const [stats, setStats] = useState<any[]>([]);
 
-  // TODO: Buscar da API GET /responses?formId={formFilter}&status={statusFilter}&search={search}
-  const responses: ResponseData[] = [];
+  // Buscar formulários para filtro
+  useEffect(() => {
+    async function loadForms() {
+      try {
+        const { FormsService } = await import('@/lib/services/forms.service');
+        const response = await FormsService.getAll({ 
+          status: 'all',
+          page: 1, 
+          pageSize: 100,
+          searchIn: 'all',
+          sortBy: 'createdAt',
+          sortOrder: 'desc'
+        });
+        setForms(response.data.map(f => ({ id: f.id, name: f.name })));
+      } catch {
+        // Silently fail - not critical
+      }
+    }
+    loadForms();
+  }, []);
 
-  // TODO: Buscar da API GET /forms/:id/fields quando abrir modal de detalhes
-  const formFields: FormField[] = [];
-
-  // TODO: Buscar da API GET /dashboard/stats (ou endpoint específico de responses)
-  const stats: any[] = [];
+  // Buscar respostas
+  useEffect(() => {
+    async function loadResponses() {
+      try {
+        const { FormsService } = await import('@/lib/services/forms.service');
+        const allResponses: ResponseData[] = [];
+        
+        for (const form of forms) {
+          const submissions = await FormsService.getSubmissions(form.id, { page: 1, pageSize: 100 });
+          submissions.data.forEach(sub => {
+            allResponses.push({
+              id: sub.id,
+              formId: sub.formId,
+              formName: form.name,
+              status: sub.isCompleted ? 'COMPLETE' : 'INCOMPLETE',
+              submittedAt: new Date(sub.createdAt),
+              updatedAt: new Date(sub.completedAt || sub.createdAt),
+              data: sub.values.reduce((acc, v) => ({ ...acc, [v.fieldId]: v.value }), {}),
+            });
+          });
+        }
+        
+        setResponses(allResponses);
+      } catch {
+        // Silently fail - not critical
+      }
+    }
+    
+    if (forms.length > 0) {
+      loadResponses();
+    }
+  }, [forms]);
 
   // Função memoizada para abrir modal
-  const openModal = useCallback((responseId: string) => {
+  const openModal = useCallback(async (responseId: string) => {
     const response = responses.find((r) => r.id === responseId);
     if (response) {
       setSelectedResponse(response);
       setIsDetailsOpen(true);
+      
+      // Buscar campos do formulário
+      try {
+        const { FormsService } = await import('@/lib/services/forms.service');
+        const form = await FormsService.getById(response.formId);
+        setFormFields(form.fields.map(f => ({
+          id: f.id,
+          type: f.type as any,
+          label: f.label,
+          name: f.name,
+          required: f.required,
+          placeholder: '',
+          options: f.config?.options as string[] | undefined,
+          fieldType: f.type,
+        })));
+      } catch {
+        // Silently fail - not critical
+      }
     }
   }, [responses]);
 
@@ -97,7 +162,6 @@ export function ResponsesClient({ searchParams }: ResponsesClientProps) {
   }, [initialResponseId, hasInitialized, openModal]);
 
   const handleSaveResponse = useCallback((data: Record<string, unknown>) => {
-    console.log("Salvando resposta:", data);
     toast.success("Resposta atualizada com sucesso");
   }, []);
 

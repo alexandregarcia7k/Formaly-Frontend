@@ -1,103 +1,131 @@
-import { api } from "@/lib/api";
-
-export interface User {
-  id: string;
-  email: string;
-  name: string;
-  image: string | null;
-  createdAt: string;
-  updatedAt: string;
-}
-
-export interface AuthResponse {
-  user: User;
-  // ⚠️ accessToken NÃO é mais retornado - agora usa cookies HTTP-only
-}
-
-export interface RegisterDTO {
-  email: string;
-  password: string;
-  name: string;
-}
-
-export interface LoginDTO {
-  email: string;
-  password: string;
-}
-
-export interface SyncOAuthDTO {
-  email: string;
-  name: string;
-  image?: string;
-  provider: "google" | "github" | "facebook";
-  providerId: string;
-  accessToken: string;
-  refreshToken?: string;
-  expiresAt?: number;
-}
+import { apiClient } from "@/lib/api/client";
+import {
+  registerSchema,
+  loginSchema,
+  forgotPasswordSchema,
+  resetPasswordSchema,
+  syncOAuthSchema,
+  authResponseSchema,
+  type RegisterDto,
+  type LoginDto,
+  type ForgotPasswordDto,
+  type ResetPasswordDto,
+  type SyncOAuthDto,
+  type User,
+} from "@/schemas";
 
 /**
- * Serviço de autenticação
- * ⚠️ MIGRADO PARA COOKIES HTTP-ONLY
+ * Service de autenticação
+ * Gerencia todas as operações de auth com validação Zod
+ * JWT em cookies httpOnly (withCredentials: true)
  */
 export class AuthService {
   /**
-   * Registra novo usuário com email/senha
-   * Cookie HTTP-only é salvo automaticamente pelo navegador
+   * Registra novo usuário
+   * POST /api/auth/register
    */
-  static async register(data: RegisterDTO): Promise<User> {
-    const response = await api.post<AuthResponse>("/api/auth/register", data);
-    // Cookie já foi salvo automaticamente ✅
-    return response.data.user;
+  static async register(data: RegisterDto): Promise<User> {
+    const validated = registerSchema.safeParse(data);
+    if (!validated.success) {
+      throw new Error(validated.error.errors[0].message);
+    }
+
+    const response = await apiClient.post<{ user: User }>("/api/auth/register", validated.data);
+    const parsed = authResponseSchema.safeParse(response.data);
+    
+    if (!parsed.success) {
+      throw new Error("Resposta inválida do servidor");
+    }
+
+    return parsed.data.user;
   }
 
   /**
-   * Faz login com email/senha
-   * Cookie HTTP-only é salvo automaticamente pelo navegador
+   * Faz login
+   * POST /api/auth/login
    */
-  static async login(data: LoginDTO): Promise<User> {
-    const response = await api.post<AuthResponse>("/api/auth/login", data);
-    // Cookie já foi salvo automaticamente ✅
-    return response.data.user;
-  }
+  static async login(data: LoginDto): Promise<User> {
+    const validated = loginSchema.safeParse(data);
+    if (!validated.success) {
+      throw new Error(validated.error.errors[0].message);
+    }
 
-  /**
-   * Sincroniza usuário após OAuth (Google, GitHub, Facebook)
-   * Cookie HTTP-only é salvo automaticamente pelo navegador
-   */
-  static async syncOAuth(data: SyncOAuthDTO): Promise<User> {
-    const response = await api.post<AuthResponse>("/api/auth/sync", data);
-    // Cookie já foi salvo automaticamente ✅
-    return response.data.user;
+    const response = await apiClient.post<{ user: User }>("/api/auth/login", validated.data);
+    const parsed = authResponseSchema.safeParse(response.data);
+    
+    if (!parsed.success) {
+      throw new Error("Resposta inválida do servidor");
+    }
+
+    return parsed.data.user;
   }
 
   /**
    * Faz logout
-   * ⚠️ Chama backend para limpar cookie HTTP-only
+   * POST /api/auth/logout
    */
   static async logout(): Promise<void> {
-    await api.post("/api/auth/logout");
-    // Cookie foi removido pelo backend ✅
+    await apiClient.post("/api/auth/logout");
   }
 
   /**
    * Busca dados do usuário autenticado
-   * Valida o cookie HTTP-only automaticamente
-   * @throws {Error} Se o cookie for inválido ou expirado (401)
+   * GET /api/auth/me
    */
   static async getMe(): Promise<User> {
-    const response = await api.get<AuthResponse>("/api/auth/me");
-    return response.data.user;
+    const response = await apiClient.get<{ user: User }>("/api/auth/me");
+    const parsed = authResponseSchema.safeParse(response.data);
+    
+    if (!parsed.success) {
+      throw new Error("Resposta inválida do servidor");
+    }
+
+    return parsed.data.user;
   }
 
   /**
-   * Verifica se usuário está autenticado
-   * ⚠️ Com cookies HTTP-only + NextAuth, a autenticação é gerenciada automaticamente
-   * Use a sessão do NextAuth ou o contexto de autenticação
+   * Sincroniza usuário OAuth
+   * POST /api/auth/sync
    */
-  static isAuthenticated(): boolean {
-    // Cookie HTTP-only não pode ser acessado via JavaScript
-    // A autenticação é validada automaticamente pelo backend em cada requisição
-    return true; // Assume autenticado, o backend validará
+  static async syncOAuth(data: SyncOAuthDto): Promise<User> {
+    const validated = syncOAuthSchema.safeParse(data);
+    if (!validated.success) {
+      throw new Error(validated.error.errors[0].message);
+    }
+
+    const response = await apiClient.post<{ user: User }>("/api/auth/sync", validated.data);
+    const parsed = authResponseSchema.safeParse(response.data);
+    
+    if (!parsed.success) {
+      throw new Error("Resposta inválida do servidor");
+    }
+
+    return parsed.data.user;
+  }
+
+  /**
+   * Solicita recuperação de senha
+   * POST /api/auth/forgot-password
+   */
+  static async forgotPassword(email: string): Promise<void> {
+    const validated = forgotPasswordSchema.safeParse({ email });
+    if (!validated.success) {
+      throw new Error(validated.error.errors[0].message);
+    }
+
+    await apiClient.post("/api/auth/forgot-password", validated.data);
+  }
+
+  /**
+   * Redefine senha com token
+   * POST /api/auth/reset-password
+   */
+  static async resetPassword(data: ResetPasswordDto): Promise<void> {
+    const validated = resetPasswordSchema.safeParse(data);
+    if (!validated.success) {
+      throw new Error(validated.error.errors[0].message);
+    }
+
+    await apiClient.post("/api/auth/reset-password", validated.data);
   }
 }

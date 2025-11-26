@@ -1,20 +1,26 @@
 "use client";
 
+import { SessionProvider } from "next-auth/react";
 import { ThemeProvider, useTheme } from "next-themes";
 import { Toaster } from "sonner";
 import { ReactNode } from "react";
 import { useIsMobile } from "@/hooks/use-mobile";
 
 /**
- * Providers Component - Modo Desenvolvimento UI/UX
- * ThemeProvider para dark/light mode + Toaster para notificações
+ * Providers Component
+ * Agrupa todos os providers da aplicação:
+ * - SessionProvider: Auth.js session management
+ * - ThemeProvider: Dark/light mode
+ * - Toaster: Notificações
  */
 export function Providers({ children }: { children: ReactNode }) {
   return (
-    <ThemeProvider attribute="class" defaultTheme="system" enableSystem>
-      {children}
-      <ToasterWrapper />
-    </ThemeProvider>
+    <SessionProvider>
+      <ThemeProvider attribute="class" defaultTheme="system" enableSystem>
+        {children}
+        <ToasterWrapper />
+      </ThemeProvider>
+    </SessionProvider>
   );
 }
 

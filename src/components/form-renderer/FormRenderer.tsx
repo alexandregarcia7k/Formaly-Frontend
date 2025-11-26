@@ -42,7 +42,7 @@ export function FormRenderer({
 }: FormRendererProps) {
   const [errors, setErrors] = useState<Record<string, string>>({});
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setErrors({});
 
@@ -65,7 +65,7 @@ export function FormRenderer({
       return;
     }
 
-    onSubmit(formData);
+    await onSubmit(formData);
   };
 
   return (

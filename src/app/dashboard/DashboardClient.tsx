@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback } from "react";
+import { useCallback, useMemo } from "react";
 import { useRouter } from "next/navigation";
 import { formatDistanceToNow } from "date-fns";
 import { ptBR } from "date-fns/locale";
@@ -14,6 +14,8 @@ import { TableCell } from "@/components/ui/table";
 import { ActivityTimeline } from "@/components/dashboard/ActivityTimeline";
 import { QuickActionCard } from "@/components/dashboard/QuickActionCard";
 import { DataTable } from "@/components/datatable";
+import { useDashboardStats, useLatestResponses, useResponsesOverTime, useActivities } from "@/hooks";
+import type { ActivityItem } from "@/schemas";
 
 interface DashboardStat {
   title: string;
@@ -23,28 +25,13 @@ interface DashboardStat {
   footer: string;
 }
 
-interface Activity {
-  id: string;
-  type: "new_responses" | "form_published" | "daily_responses";
-  message: string;
-  timestamp: Date;
-  icon: any;
-}
-
 interface ChartData {
   date: string;
   desktop: number;
   mobile: number;
 }
 
-// TODO: Buscar da API GET /dashboard/stats
-const stats: DashboardStat[] = [];
 
-// TODO: Buscar da API GET /dashboard/activities?limit=5
-const activities: Activity[] = [];
-
-// TODO: Buscar da API GET /dashboard/responses-over-time?period=30d
-const chartData: ChartData[] = [];
 
 const chartConfig = {
   desktop: {
@@ -61,20 +48,56 @@ interface LatestResponse {
   id: string;
   formId: string;
   formName: string;
-  respondentName?: string;
-  respondentEmail?: string;
-  status: "COMPLETE" | "INCOMPLETE";
-  submittedAt: Date;
+  isCompleted: boolean;
+  createdAt: Date;
+  completedAt: Date | null;
 }
-
-// TODO: Buscar da API GET /dashboard/latest-responses?limit=10
-const latestResponses: LatestResponse[] = [];
 
 export function DashboardClient() {
   const router = useRouter();
-  
-  // TODO: Buscar da API GET /auth/me
+  const { stats: dashboardStats, isLoading: isLoadingStats, error: statsError } = useDashboardStats();
+  const { responses: latestResponses, isLoading: isLoadingResponses, error: responsesError } = useLatestResponses(10);
+  const { data: chartDataRaw, isLoading: isLoadingChart, error: chartError } = useResponsesOverTime("30d");
+  const { activities, isLoading: isLoadingActivities, error: activitiesError } = useActivities(5);
+
   const userName = "Usuário";
+
+  const stats: DashboardStat[] = useMemo(() => {
+    if (!dashboardStats) return [];
+    return [
+      {
+        title: "Total de Formulários",
+        value: dashboardStats.totalForms,
+        trend: { value: "", isPositive: true },
+        description: "",
+        footer: "Formulários ativos e inativos",
+      },
+      {
+        title: "Total de Respostas",
+        value: dashboardStats.totalResponses,
+        trend: { value: "", isPositive: true },
+        description: "",
+        footer: "Respostas coletadas",
+      },
+      {
+        title: "Taxa de Conclusão",
+        value: `${dashboardStats.averageCompletionRate.toFixed(1)}%`,
+        trend: { value: "", isPositive: true },
+        description: "",
+        footer: "Média de conclusão",
+      },
+    ];
+  }, [dashboardStats]);
+
+  const chartData = useMemo(() => {
+    return chartDataRaw.map((item) => ({
+      date: new Date(item.date).toLocaleDateString("pt-BR", { day: "2-digit", month: "short" }),
+      desktop: Math.floor(item.count * 0.6),
+      mobile: Math.floor(item.count * 0.4),
+    }));
+  }, [chartDataRaw]);
+
+
 
   // React Compiler otimiza automaticamente - useMemo desnecessário para dados estáticos
   const quickActions = [
@@ -105,40 +128,19 @@ export function DashboardClient() {
     [router]
   );
 
-  // React Compiler otimiza automaticamente
-  const renderRow = (response: LatestResponse) => (
+  const renderRow = useCallback((response: LatestResponse) => (
       <>
         <TableCell>
           <div className="flex flex-col gap-1">
             <span className="font-medium">{response.formName}</span>
             <span className="text-xs text-muted-foreground">
-              ID: {response.formId}
+              ID: {response.formId.slice(0, 8)}
             </span>
           </div>
-        </TableCell>
-        <TableCell>
-          <div className="flex flex-col gap-1">
-            <span className="font-medium">
-              {response.respondentName || response.respondentEmail || "Anônimo"}
-            </span>
-            {response.respondentName && response.respondentEmail && (
-              <span className="text-xs text-muted-foreground">
-                {response.respondentEmail}
-              </span>
-            )}
-          </div>
-        </TableCell>
-        <TableCell>
-          <Badge
-            variant={response.status === "COMPLETE" ? "default" : "secondary"}
-            className={response.status === "COMPLETE" ? "bg-green-500 hover:bg-green-600" : ""}
-          >
-            {response.status === "COMPLETE" ? "Completa" : "Incompleta"}
-          </Badge>
         </TableCell>
         <TableCell>
           <span className="text-sm text-muted-foreground">
-            {formatDistanceToNow(response.submittedAt, {
+            {formatDistanceToNow(response.completedAt || response.createdAt, {
               addSuffix: true,
               locale: ptBR,
             })}
@@ -155,7 +157,28 @@ export function DashboardClient() {
           </Button>
         </TableCell>
       </>
+    ), [handleRowClick]);
+
+  // Mostrar erro se houver
+  if (statsError || responsesError || chartError || activitiesError) {
+    return (
+      <div className="@container/main space-y-6">
+        <Card className="border-destructive">
+          <CardHeader>
+            <CardTitle className="text-destructive">Erro ao Carregar Dados</CardTitle>
+            <CardDescription>
+              {statsError || responsesError || chartError}
+            </CardDescription>
+          </CardHeader>
+          <CardContent>
+            <p className="text-sm text-muted-foreground">
+              Verifique se o backend está rodando em http://localhost:3333
+            </p>
+          </CardContent>
+        </Card>
+      </div>
     );
+  }
 
   return (
     <div className="@container/main space-y-6">
@@ -181,13 +204,7 @@ export function DashboardClient() {
               </CardDescription>
               <CardTitle className="text-3xl font-bold">{stat.value}</CardTitle>
             </CardHeader>
-            <CardContent className="space-y-1 pt-0">
-              <div className="flex items-center gap-2 text-sm">
-                <span className={stat.trend.isPositive ? "text-green-600 font-semibold" : "text-red-600 font-semibold"}>
-                  {stat.trend.value}
-                </span>
-                <span className="text-muted-foreground">{stat.description}</span>
-              </div>
+            <CardContent className="pt-0">
               <p className="text-xs text-muted-foreground">{stat.footer}</p>
             </CardContent>
           </Card>
@@ -232,7 +249,7 @@ export function DashboardClient() {
       {/* Latest Responses */}
       <DataTable
         data={latestResponses}
-        headers={["Formulário", "Respondente", "Status", "Respondido em", "Ações"]}
+        headers={["Formulário", "Respondido em", "Ações"]}
         renderRow={renderRow}
         cardTitle="Últimas Respostas"
         cardDescription="10 respostas mais recentes dos seus formulários"

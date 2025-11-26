@@ -49,8 +49,7 @@ export function FormFieldRenderer({
   switch (field.type) {
     case "text":
     case "email":
-    case "url":
-    case "tel":
+    case "phone":
       return (
         <div className="space-y-2">
           <Label htmlFor={field.id}>
@@ -60,15 +59,7 @@ export function FormFieldRenderer({
           <div className="relative">
             <Input
               id={field.id}
-              type={
-                field.type === "email"
-                  ? "email"
-                  : field.type === "tel"
-                  ? "tel"
-                  : field.type === "url"
-                  ? "url"
-                  : "text"
-              }
+              type={field.type === "email" ? "email" : field.type === "phone" ? "tel" : "text"}
               placeholder={field.placeholder}
               value={(value as string) || ""}
               onChange={(e) => onChange(e.target.value)}
@@ -191,44 +182,6 @@ export function FormFieldRenderer({
         </div>
       );
 
-    case "time":
-      return (
-        <div className="space-y-2">
-          <Label htmlFor={field.id}>
-            {field.label}
-            {renderRequiredIndicator()}
-          </Label>
-          <Input
-            id={field.id}
-            type="time"
-            placeholder={field.placeholder}
-            value={(value as string) || ""}
-            onChange={(e) => onChange(e.target.value)}
-            required={field.required}
-            readOnly={readOnly}
-          />
-        </div>
-      );
-
-    case "datetime":
-      return (
-        <div className="space-y-2">
-          <Label htmlFor={field.id}>
-            {field.label}
-            {renderRequiredIndicator()}
-          </Label>
-          <Input
-            id={field.id}
-            type="datetime-local"
-            placeholder={field.placeholder}
-            value={(value as string) || ""}
-            onChange={(e) => onChange(e.target.value)}
-            required={field.required}
-            readOnly={readOnly}
-          />
-        </div>
-      );
-
     case "select":
       return (
         <div className="space-y-2">
@@ -344,6 +297,23 @@ export function FormFieldRenderer({
               );
             })}
           </div>
+        </div>
+      );
+
+    case "file":
+      return (
+        <div className="space-y-2">
+          <Label htmlFor={field.id}>
+            {field.label}
+            {renderRequiredIndicator()}
+          </Label>
+          <Input
+            id={field.id}
+            type="file"
+            onChange={(e) => onChange(e.target.files?.[0])}
+            required={field.required}
+            disabled={readOnly}
+          />
         </div>
       );
 

@@ -1,4 +1,4 @@
-import { api } from "@/lib/api";
+import { apiClient } from "@/lib/api/client";
 
 export interface PublicFormField {
   id: string;
@@ -33,10 +33,13 @@ export interface ValidatePasswordResponse {
 }
 
 export interface SubmitFormRequest {
-  password?: string;
-  respondentEmail?: string;
-  respondentName?: string;
   values: Record<string, unknown>;
+  password?: string;
+  metadata?: {
+    startedAt?: string;
+    completedAt?: string;
+    timeSpent?: number;
+  };
 }
 
 export interface SubmitFormResponse {
@@ -52,7 +55,7 @@ export class PublicFormsService {
    * Visualiza formulário público
    */
   static async getPublicForm(formId: string): Promise<PublicFormResponse> {
-    const response = await api.get<PublicFormResponse>(`/f/${formId}`);
+    const response = await apiClient.get<PublicFormResponse>(`/f/${formId}`);
     return response.data;
   }
 
@@ -63,7 +66,7 @@ export class PublicFormsService {
     formId: string,
     password: string
   ): Promise<ValidatePasswordResponse> {
-    const response = await api.post<ValidatePasswordResponse>(
+    const response = await apiClient.post<ValidatePasswordResponse>(
       `/f/${formId}/validate-password`,
       { password }
     );
@@ -77,7 +80,7 @@ export class PublicFormsService {
     formId: string,
     data: SubmitFormRequest
   ): Promise<SubmitFormResponse> {
-    const response = await api.post<SubmitFormResponse>(
+    const response = await apiClient.post<SubmitFormResponse>(
       `/f/${formId}/submit`,
       data
     );

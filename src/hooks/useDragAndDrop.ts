@@ -1,7 +1,7 @@
-import { useState, useCallback } from "react";
-import { FieldType, FormField, createNewField } from "@/components/form-builder";
+import { useState } from "react";
+import { FormField, createNewField } from "@/components/form-builder";
+import { FieldType } from "@/types/field-types";
 
-// Constantes para auto-scroll durante drag
 const AUTO_SCROLL_THRESHOLD = 100;
 const AUTO_SCROLL_SPEED = 10;
 
@@ -11,117 +11,82 @@ export function useDragAndDrop(
 ) {
   const [draggedIndex, setDraggedIndex] = useState<number | null>(null);
   const [dragOverIndex, setDragOverIndex] = useState<number | null>(null);
-  const [draggedFieldType, setDraggedFieldType] = useState<FieldType | null>(
-    null
-  );
+  const [draggedFieldType, setDraggedFieldType] = useState<FieldType | null>(null);
 
-  // Auto-scroll quando arrastar perto das bordas
-  const handleAutoScroll = useCallback((clientY: number) => {
+  const handleAutoScroll = (clientY: number) => {
     const windowHeight = window.innerHeight;
-
     if (clientY < AUTO_SCROLL_THRESHOLD) {
       window.scrollBy({ top: -AUTO_SCROLL_SPEED, behavior: "auto" });
     } else if (clientY > windowHeight - AUTO_SCROLL_THRESHOLD) {
       window.scrollBy({ top: AUTO_SCROLL_SPEED, behavior: "auto" });
     }
-  }, []);
+  };
 
-  // Handlers para reordenar campos existentes
-  const handleDragStart = useCallback((index: number) => {
+  const handleDragStart = (index: number) => setDraggedIndex(index);
+
+  const handleDragOver = (e: React.DragEvent, index: number) => {
+    e.preventDefault();
+    handleAutoScroll(e.clientY);
+
+    if (draggedIndex === null || draggedIndex === index) {
+      setDragOverIndex(null);
+      return;
+    }
+
+    setDragOverIndex(index);
+    const newFields = [...selectedFields];
+    const draggedField = newFields[draggedIndex];
+    newFields.splice(draggedIndex, 1);
+    newFields.splice(index, 0, draggedField);
+    setSelectedFields(newFields);
     setDraggedIndex(index);
-  }, []);
+  };
 
-  const handleDragOver = useCallback(
-    (e: React.DragEvent, index: number) => {
-      e.preventDefault();
-      handleAutoScroll(e.clientY);
-
-      if (draggedIndex === null || draggedIndex === index) {
-        setDragOverIndex(null);
-        return;
-      }
-
-      setDragOverIndex(index);
-
-      // Reordenar campos em tempo real
-      const newFields = [...selectedFields];
-      const draggedField = newFields[draggedIndex];
-      newFields.splice(draggedIndex, 1);
-      newFields.splice(index, 0, draggedField);
-
-      setSelectedFields(newFields);
-      setDraggedIndex(index);
-    },
-    [draggedIndex, selectedFields, setSelectedFields, handleAutoScroll]
-  );
-
-  const handleDragEnd = useCallback(() => {
+  const handleDragEnd = () => {
     setDraggedIndex(null);
     setDragOverIndex(null);
     setDraggedFieldType(null);
-  }, []);
+  };
 
-  // Handlers para arrastar tipos de campo da sidebar
-  const handleFieldTypeDragStart = useCallback(
-    (e: React.DragEvent, type: FieldType) => {
-      setDraggedFieldType(type);
-      e.dataTransfer.effectAllowed = "copy";
-    },
-    []
-  );
+  const handleFieldTypeDragStart = (e: React.DragEvent, type: FieldType) => {
+    setDraggedFieldType(type);
+    e.dataTransfer.effectAllowed = "copy";
+  };
 
-  const handleFieldTypeDragOver = useCallback(
-    (e: React.DragEvent, index: number) => {
-      e.preventDefault();
+  const handleFieldTypeDragOver = (e: React.DragEvent, index: number) => {
+    e.preventDefault();
+    if (!draggedFieldType) return;
+    handleAutoScroll(e.clientY);
+    setDragOverIndex(index);
+  };
 
-      if (!draggedFieldType) return;
+  const handleFieldTypeDrop = (e: React.DragEvent, index: number) => {
+    e.preventDefault();
+    e.stopPropagation();
+    if (draggedFieldType) {
+      const newField = createNewField(draggedFieldType);
+      const newFields = [...selectedFields];
+      newFields.splice(index, 0, newField);
+      setSelectedFields(newFields);
+      setDraggedFieldType(null);
+      setDragOverIndex(null);
+    }
+  };
 
-      handleAutoScroll(e.clientY);
-      setDragOverIndex(index);
-    },
-    [draggedFieldType, handleAutoScroll]
-  );
+  const handleCanvasDragOver = (e: React.DragEvent) => {
+    e.preventDefault();
+    handleAutoScroll(e.clientY);
+  };
 
-  const handleFieldTypeDrop = useCallback(
-    (e: React.DragEvent, index: number) => {
-      e.preventDefault();
-      e.stopPropagation();
-
-      if (draggedFieldType) {
-        const newField = createNewField(draggedFieldType);
-        const newFields = [...selectedFields];
-        newFields.splice(index, 0, newField);
-
-        setSelectedFields(newFields);
-        setDraggedFieldType(null);
-        setDragOverIndex(null);
-      }
-    },
-    [draggedFieldType, selectedFields, setSelectedFields]
-  );
-
-  // Handlers para o canvas (drop no final)
-  const handleCanvasDragOver = useCallback(
-    (e: React.DragEvent) => {
-      e.preventDefault();
-      handleAutoScroll(e.clientY);
-    },
-    [handleAutoScroll]
-  );
-
-  const handleCanvasDrop = useCallback(
-    (e: React.DragEvent) => {
-      e.preventDefault();
-
-      if (draggedFieldType) {
-        const newField = createNewField(draggedFieldType);
-        setSelectedFields([...selectedFields, newField]);
-        setDraggedFieldType(null);
-        setDragOverIndex(null);
-      }
-    },
-    [draggedFieldType, selectedFields, setSelectedFields]
-  );
+  const handleCanvasDrop = (e: React.DragEvent) => {
+    e.preventDefault();
+    if (draggedFieldType) {
+      const newField = createNewField(draggedFieldType);
+      setSelectedFields([...selectedFields, newField]);
+      setDraggedFieldType(null);
+      setDragOverIndex(null);
+    }
+  };
 
   return {
     draggedIndex,

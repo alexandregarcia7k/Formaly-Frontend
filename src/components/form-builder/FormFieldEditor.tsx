@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -19,19 +19,19 @@ import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
 import { GripVertical, Trash2, Type, Sparkles, ChevronUp, ChevronDown } from "lucide-react";
 import { cn } from "@/lib/utils";
-import { FieldType, FieldTypeConfig, FIELD_TYPES } from "./FormFieldTypes";
-import {
-  FieldTypesService,
-  FieldTypeOption,
-} from "@/lib/services/field-types.service";
+import { FieldType } from "@/types/field-types";
+import { FieldTypeConfig, FIELD_TYPES } from "./FormFieldTypes";
+import { FieldTypesService } from "@/lib/services/field-types.service";
 
 export interface FormField {
   id: string;
   type: FieldType;
   label: string;
+  name: string;
   placeholder?: string;
   required: boolean;
   options?: string[];
+  config?: any;
   fieldType?: string; // Tipo pré-definido do backend (ex: "full_name", "email")
 }
 
@@ -47,6 +47,7 @@ export function createNewField(type: FieldType): FormField {
     id: crypto.randomUUID(),
     type,
     label: fieldConfig?.label || "Novo campo",
+    name: (fieldConfig?.label || "campo").toLowerCase().replace(/\s+/g, "_"),
     placeholder: "",
     required: false,
     options: needsOptions ? ["Opção 1", "Opção 2", "Opção 3"] : undefined,
@@ -87,17 +88,10 @@ export function FormFieldEditor({
   const fieldType = fieldTypes.find((f) => f.type === field.type);
   const Icon = fieldType?.icon || Type;
 
-  const [predefinedTypes, setPredefinedTypes] = useState<FieldTypeOption[]>([]);
-
-  // Buscar presets pré-definidos do backend
-  // Filtra presets compatíveis com o tipo HTML atual do campo
-  useEffect(() => {
-    FieldTypesService.getFieldTypes().then((types) => {
-      // Filtrar presets que correspondem ao tipo HTML atual do campo
-      const filteredTypes = types.filter((t) => t.type === field.type);
-      setPredefinedTypes(filteredTypes);
-    });
-  }, [field.type]);
+  // Derivar presets diretamente - sem useState/useEffect desnecessários
+  const predefinedTypes = FieldTypesService.getFieldTypes().filter(
+    (t) => t.type === field.type
+  );
 
   // Aplicar preset selecionado
   const handlePredefinedTypeChange = (selectedType: string) => {

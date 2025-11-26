@@ -14,7 +14,7 @@ interface EditFormPageProps {
   params: Promise<{ id: string }>;
 }
 
-export default function EditFormPage({ params }: EditFormPageProps) {
+function EditFormPage({ params }: EditFormPageProps) {
   const { id } = use(params);
   const router = useRouter();
   const [isLoading, setIsLoading] = useState(true);
@@ -27,7 +27,6 @@ export default function EditFormPage({ params }: EditFormPageProps) {
     expiresAt?: Date | null;
     maxResponses?: number | null;
     allowMultipleSubmissions?: boolean;
-    successMessage?: string;
   } | null>(null);
 
   useEffect(() => {
@@ -54,7 +53,6 @@ export default function EditFormPage({ params }: EditFormPageProps) {
           expiresAt: response.expiresAt ? new Date(response.expiresAt) : null,
           maxResponses: response.maxResponses,
           allowMultipleSubmissions: response.allowMultipleSubmissions,
-          successMessage: response.successMessage || "",
         });
       } catch (error) {
         toast.error("Erro ao carregar formulário");
@@ -101,3 +99,5 @@ export default function EditFormPage({ params }: EditFormPageProps) {
 
   return <FormBuilderContainer mode="edit" initialData={formData} />;
 }
+
+export default EditFormPage;

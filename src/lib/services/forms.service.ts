@@ -1,175 +1,221 @@
-import { FormField } from "@/components/form-builder";
+import { apiClient } from "@/lib/api/client";
+import {
+  createFormSchema,
+  updateFormSchema,
+  formResponseSchema,
+  paginatedFormsSchema,
+  formListQuerySchema,
+  paginatedSubmissionsSchema,
+  submissionQuerySchema,
+  uuidSchema,
+  type CreateFormDto,
+  type UpdateFormDto,
+  type FormResponse,
+  type PaginatedForms,
+  type FormListQuery,
+  type PaginatedSubmissions,
+  type SubmissionQuery,
+} from "@/schemas";
 
-// ===== INTERFACES =====
+// Re-export types for compatibility
+export type { FormResponse, CreateFormDto, UpdateFormDto };
 
-export interface CreateFormFieldDTO {
-  type: string;
-  label: string;
-  name: string;
-  placeholder?: string;
-  required: boolean;
-  config?: Record<string, unknown>;
-}
-
-export interface CreateFormDTO {
-  name: string;
-  description?: string;
-  password?: string;
-  maxResponses?: number;
-  expiresAt?: Date;
-  allowMultipleSubmissions?: boolean;
-  successMessage?: string;
-  fields: CreateFormFieldDTO[];
-}
-
-export interface UpdateFormDTO {
-  name?: string;
-  description?: string;
-  status?: "ACTIVE" | "INACTIVE";
-  password?: string;
-  maxResponses?: number;
-  expiresAt?: Date;
-  allowMultipleSubmissions?: boolean;
-  successMessage?: string;
-  fields?: CreateFormFieldDTO[];
-}
-
-export interface FormFieldResponse {
-  id: string;
-  formId: string;
-  type: string;
-  label: string;
-  name: string;
-  required: boolean;
-  config: Record<string, unknown> | null;
-}
-
-export interface FormResponse {
-  id: string;
-  userId: string;
-  name: string;
-  description: string | null;
-  status: "ACTIVE" | "INACTIVE";
-  maxResponses: number | null;
-  expiresAt: string | null;
-  allowMultipleSubmissions: boolean;
-  successMessage: string | null;
-  createdAt: string;
-  updatedAt: string;
-  fields: FormFieldResponse[];
-  _count: {
-    submissions: number;
-  };
-}
-
-export interface FormsListResponse {
-  data: FormResponse[];
-  pagination: {
-    page: number;
-    limit: number;
-    total: number;
-    totalPages: number;
-  };
-}
-
-// TODO: Implementar chamadas reais de API
+/**
+ * Service de formulários
+ * Gerencia CRUD de formulários com validação Zod
+ */
 export class FormsService {
   /**
-   * Cria um novo formulário
-   * TODO: POST /forms
+   * Cria novo formulário
+   * POST /api/forms
    */
-  static async createForm(data: CreateFormDTO): Promise<FormResponse> {
-    throw new Error("Not implemented - POST /forms");
-  }
-
-  /**
-   * Lista formulários do usuário (paginado)
-   * TODO: GET /forms?page={page}
-   */
-  static async listForms(page: number = 1): Promise<FormsListResponse> {
-    throw new Error("Not implemented - GET /forms");
-  }
-
-  /**
-   * Busca um formulário específico
-   * TODO: GET /forms/:id
-   */
-  static async getForm(id: string): Promise<FormResponse> {
-    throw new Error("Not implemented - GET /forms/:id");
-  }
-
-  /**
-   * Atualiza um formulário existente
-   * TODO: PUT /forms/:id
-   */
-  static async updateForm(
-    id: string,
-    data: UpdateFormDTO
-  ): Promise<FormResponse> {
-    throw new Error("Not implemented - PUT /forms/:id");
-  }
-
-  /**
-   * Deleta um formulário
-   * TODO: DELETE /forms/:id
-   */
-  static async deleteForm(id: string): Promise<void> {
-    throw new Error("Not implemented - DELETE /forms/:id");
-  }
-
-  /**
-   * Clona um formulário existente
-   * TODO: POST /forms/:id/clone
-   */
-  static async cloneForm(id: string): Promise<FormResponse> {
-    throw new Error("Not implemented - POST /forms/:id/clone");
-  }
-
-  /**
-   * Converte campos do formato do backend para o formato do frontend
-   */
-  static mapFieldsToFrontend(
-    fields: FormFieldResponse[] | undefined
-  ): FormField[] {
-    if (!fields || !Array.isArray(fields)) {
-      return [];
+  static async create(data: CreateFormDto): Promise<FormResponse> {
+    const validated = createFormSchema.safeParse(data);
+    if (!validated.success) {
+      throw new Error(validated.error.errors[0].message);
     }
-    return fields.map((field) => ({
-      id: field.id,
-      type: field.type as FormField["type"],
-      label: field.label,
-      placeholder: (field.config?.placeholder as string) || "",
-      required: field.required,
-      options: field.config?.options as string[] | undefined,
-      fieldType: field.type,
-    }));
+
+    const response = await apiClient.post<FormResponse>("/api/forms", validated.data);
+    const parsed = formResponseSchema.safeParse(response.data);
+    
+    if (!parsed.success) {
+      throw new Error("Resposta inválida do servidor");
+    }
+
+    return parsed.data;
   }
 
   /**
-   * Converte campos do formato do frontend para o formato do backend
+   * Lista formulários
+   * GET /api/forms
    */
-  static mapFieldsToBackend(fields: FormField[]): CreateFormFieldDTO[] {
-    return fields.map((field) => {
-      const dto: CreateFormFieldDTO = {
-        type: field.type,
-        label: field.label,
-        name: field.label.toLowerCase().replace(/\s+/g, "_"),
-        required: field.required,
-      };
+  static async getAll(query?: FormListQuery): Promise<PaginatedForms> {
+    const validated = formListQuerySchema.safeParse(query || {});
+    if (!validated.success) {
+      throw new Error(validated.error.errors[0].message);
+    }
 
-      // Adicionar placeholder se existir
-      if (field.placeholder) {
-        dto.placeholder = field.placeholder;
-      }
+    const response = await apiClient.get<PaginatedForms>("/api/forms", { params: validated.data });
+    const parsed = paginatedFormsSchema.safeParse(response.data);
+    
+    if (!parsed.success) {
+      throw new Error("Resposta inválida do servidor");
+    }
 
-      // Adicionar config com options se existir
-      if (field.options && field.options.length > 0) {
-        dto.config = {
-          options: field.options,
-        };
-      }
+    return parsed.data;
+  }
 
-      return dto;
-    });
+  /**
+   * Busca formulário por ID
+   * GET /api/forms/:id
+   */
+  static async getById(id: string): Promise<FormResponse> {
+    const validated = uuidSchema.safeParse(id);
+    if (!validated.success) {
+      throw new Error("ID inválido");
+    }
+
+    const response = await apiClient.get<FormResponse>(`/api/forms/${validated.data}`);
+    const parsed = formResponseSchema.safeParse(response.data);
+    
+    if (!parsed.success) {
+      throw new Error("Resposta inválida do servidor");
+    }
+
+    return parsed.data;
+  }
+
+  /**
+   * Atualiza formulário
+   * PUT /api/forms/:id
+   */
+  static async update(id: string, data: UpdateFormDto): Promise<FormResponse> {
+    const validatedId = uuidSchema.safeParse(id);
+    if (!validatedId.success) {
+      throw new Error("ID inválido");
+    }
+
+    const validated = updateFormSchema.safeParse(data);
+    if (!validated.success) {
+      throw new Error(validated.error.errors[0].message);
+    }
+
+    const response = await apiClient.put<FormResponse>(`/api/forms/${validatedId.data}`, validated.data);
+    const parsed = formResponseSchema.safeParse(response.data);
+    
+    if (!parsed.success) {
+      throw new Error("Resposta inválida do servidor");
+    }
+
+    return parsed.data;
+  }
+
+  /**
+   * Deleta formulário
+   * DELETE /api/forms/:id
+   */
+  static async delete(id: string): Promise<void> {
+    const validated = uuidSchema.safeParse(id);
+    if (!validated.success) {
+      throw new Error("ID inválido");
+    }
+
+    await apiClient.delete(`/api/forms/${validated.data}`);
+  }
+
+  /**
+   * Clona formulário
+   * POST /api/forms/:id/clone
+   */
+  static async clone(id: string): Promise<FormResponse> {
+    const validated = uuidSchema.safeParse(id);
+    if (!validated.success) {
+      throw new Error("ID inválido");
+    }
+
+    const response = await apiClient.post<FormResponse>(`/api/forms/${validated.data}/clone`);
+    const parsed = formResponseSchema.safeParse(response.data);
+    
+    if (!parsed.success) {
+      throw new Error("Resposta inválida do servidor");
+    }
+
+    return parsed.data;
+  }
+
+  /**
+   * Busca respostas do formulário
+   * GET /api/forms/:id/submissions
+   */
+  static async getSubmissions(id: string, query?: SubmissionQuery): Promise<PaginatedSubmissions> {
+    const validatedId = uuidSchema.safeParse(id);
+    if (!validatedId.success) {
+      throw new Error("ID inválido");
+    }
+
+    const validated = submissionQuerySchema.safeParse(query || {});
+    if (!validated.success) {
+      throw new Error(validated.error.errors[0].message);
+    }
+
+    const response = await apiClient.get<PaginatedSubmissions>(`/api/forms/${validatedId.data}/submissions`, { params: validated.data });
+    
+    const parsed = paginatedSubmissionsSchema.safeParse(response.data);
+    
+    if (!parsed.success) {
+      throw new Error(`Erro de validação: ${parsed.error.errors[0].message}`);
+    }
+
+    return parsed.data;
+  }
+
+  // ============================================================================
+  // Métodos de compatibilidade (legacy)
+  // ============================================================================
+
+  /** @deprecated Use create() */
+  static async createForm(data: CreateFormDto): Promise<FormResponse> {
+    return this.create(data);
+  }
+
+  /** @deprecated Use getAll() */
+  static async listForms(page: number = 1): Promise<PaginatedForms> {
+    return this.getAll({ page, pageSize: 15, searchIn: "form", status: "all", sortBy: "createdAt", sortOrder: "desc" });
+  }
+
+  /** @deprecated Use getById() */
+  static async getForm(id: string): Promise<FormResponse> {
+    return this.getById(id);
+  }
+
+  /** @deprecated Use update() */
+  static async updateForm(id: string, data: UpdateFormDto): Promise<FormResponse> {
+    return this.update(id, data);
+  }
+
+  /** @deprecated Use delete() */
+  static async deleteForm(id: string): Promise<void> {
+    return this.delete(id);
+  }
+
+  /** @deprecated Use clone() */
+  static async cloneForm(id: string): Promise<FormResponse> {
+    return this.clone(id);
+  }
+
+  /**
+   * @deprecated Mapper não mais necessário - schemas já retornam tipos corretos
+   * Mantido para compatibilidade com código existente
+   */
+  static mapFieldsToFrontend<T extends { id: string; type: string; label: string; required: boolean }>(fields: T[]): T[] {
+    return fields;
+  }
+
+  /**
+   * @deprecated Mapper não mais necessário - schemas já validam tipos corretos
+   * Mantido para compatibilidade com código existente
+   */
+  static mapFieldsToBackend<T extends { type: string; label: string; required: boolean }>(fields: T[]): T[] {
+    return fields;
   }
 }

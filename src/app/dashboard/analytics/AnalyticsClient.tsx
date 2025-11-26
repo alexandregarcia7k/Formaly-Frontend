@@ -4,6 +4,8 @@ import { useState } from "react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { SectionCards } from "@/components/sectionCards/section-cards";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Loader2 } from "lucide-react";
+import { toast } from "sonner";
 
 import { TemporalChart } from "./components/TemporalChart";
 import { DeviceChart } from "./components/DeviceChart";
@@ -13,36 +15,38 @@ import { ActivityHeatmap } from "./components/ActivityHeatmap";
 import { LocationTable } from "./components/LocationTable";
 import { FieldPerformanceTable } from "./components/FieldPerformanceTable";
 import { FormRankingTable } from "./components/FormRankingTable";
+import {
+  useAnalyticsKPIs,
+  useTemporalData,
+  useDeviceData,
+  useBrowserData,
+  useFunnelData,
+  useHeatmapData,
+  useLocationData,
+  useFieldPerformance,
+  useFormRanking,
+} from "@/hooks/useAnalytics";
+import type { Period } from "@/lib/services/analytics.service";
 
 export function AnalyticsClient() {
-  const [timeRange, setTimeRange] = useState("30d");
+  const [timeRange, setTimeRange] = useState<Period>("30d");
 
-  // TODO: Buscar da API GET /analytics/kpis?period={timeRange}
-  const stats: any[] = [];
+  const { data: stats, isLoading: isLoadingKPIs, error: errorKPIs } = useAnalyticsKPIs(timeRange);
+  const { data: temporalData, isLoading: isLoadingTemporal, error: errorTemporal } = useTemporalData(timeRange);
+  const { data: deviceData, isLoading: isLoadingDevice, error: errorDevice } = useDeviceData(timeRange);
+  const { data: browserData, isLoading: isLoadingBrowser, error: errorBrowser } = useBrowserData(timeRange);
+  const { data: funnelData, isLoading: isLoadingFunnel, error: errorFunnel } = useFunnelData(timeRange);
+  const { data: heatmapData, isLoading: isLoadingHeatmap, error: errorHeatmap } = useHeatmapData(timeRange);
+  const { data: locationData, isLoading: isLoadingLocation, error: errorLocation } = useLocationData(timeRange);
+  const { data: fieldData, isLoading: isLoadingField, error: errorField } = useFieldPerformance(timeRange);
+  const { data: formRankingData, isLoading: isLoadingRanking, error: errorRanking } = useFormRanking(timeRange, 5);
 
-  // TODO: Buscar da API GET /analytics/temporal?period={timeRange}
-  const temporalData: any[] = [];
+  const isLoading = isLoadingKPIs || isLoadingTemporal || isLoadingDevice || isLoadingBrowser;
+  const hasError = errorKPIs || errorTemporal || errorDevice || errorBrowser;
 
-  // TODO: Buscar da API GET /analytics/devices?period={timeRange}
-  const deviceData: any[] = [];
-
-  // TODO: Buscar da API GET /analytics/browsers?period={timeRange}
-  const browserData: any[] = [];
-
-  // TODO: Buscar da API GET /analytics/funnel?period={timeRange}
-  const funnelData: any[] = [];
-
-  // TODO: Buscar da API GET /analytics/heatmap?period={timeRange}
-  const heatmapData: any[] = [];
-
-  // TODO: Buscar da API GET /analytics/locations?period={timeRange}
-  const locationData: any[] = [];
-
-  // TODO: Buscar da API GET /analytics/field-performance?period={timeRange}
-  const fieldData: any[] = [];
-
-  // TODO: Buscar da API GET /analytics/form-ranking?period={timeRange}&limit=5
-  const formRankingData: any[] = [];
+  if (hasError) {
+    toast.error("Erro ao carregar dados de analytics");
+  }
 
   return (
     <div className="@container/main space-y-6">

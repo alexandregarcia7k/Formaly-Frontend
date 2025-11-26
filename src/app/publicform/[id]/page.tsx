@@ -5,6 +5,7 @@ import { toast } from "sonner";
 import { FormRenderer, PasswordProtection } from "@/components/form-renderer";
 import { FormField } from "@/components/form-builder";
 import { PublicFormsService } from "@/lib/services/public-forms.service";
+import { isValidFieldType } from "@/types/field-types";
 import { Loader2, AlertCircle } from "lucide-react";
 import { Button } from "@/components/ui/button";
 
@@ -23,7 +24,10 @@ export default function PublicFormPage({ params }: PublicFormPageProps) {
     hasPassword: boolean;
   } | null>(null);
   const [showPasswordPrompt, setShowPasswordPrompt] = useState(false);
+  const [formPassword, setFormPassword] = useState<string | undefined>(undefined);
   const [submissionData, setSubmissionData] = useState<Record<string, unknown>>({});
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [isSubmitted, setIsSubmitted] = useState(false);
 
   useEffect(() => {
     loadForm();
@@ -39,15 +43,24 @@ export default function PublicFormPage({ params }: PublicFormPageProps) {
       setFormData({
         name: response.name,
         description: response.description || "",
-        fields: response.fields.map((field) => ({
-          id: field.id,
-          type: field.type as FormField["type"],
-          label: field.label,
-          required: field.required,
-          placeholder: field.config.placeholder || "",
-          options: field.config.options as string[] | undefined,
-          fieldType: field.type,
-        })),
+        fields: response.fields
+          .filter((field) => {
+            if (!isValidFieldType(field.type)) {
+              console.warn(`Campo com tipo inválido ignorado: ${field.type}`);
+              return false;
+            }
+            return true;
+          })
+          .map((field) => ({
+            id: field.id,
+            type: field.type as FormField["type"],
+            label: field.label,
+            name: field.name,
+            required: field.required,
+            placeholder: field.config?.placeholder || "",
+            options: field.config?.options as string[] | undefined,
+            fieldType: field.type,
+          })),
         hasPassword: response.requiresPassword,
       });
 
@@ -62,6 +75,7 @@ export default function PublicFormPage({ params }: PublicFormPageProps) {
   const handlePasswordSubmit = async (password: string) => {
     try {
       await PublicFormsService.validatePassword(id, password);
+      setFormPassword(password);
       setShowPasswordPrompt(false);
     } catch {
       throw new Error("Senha incorreta");
@@ -76,13 +90,34 @@ export default function PublicFormPage({ params }: PublicFormPageProps) {
   };
 
   const handleSubmit = async () => {
+    if (!formData || isSubmitting) return;
+
+    setIsSubmitting(true);
+
+    // Mapear fieldId → fieldName
+    const dataByName: Record<string, unknown> = {};
+    Object.entries(submissionData).forEach(([fieldId, value]) => {
+      const field = formData.fields.find((f) => f.id === fieldId);
+      if (field) {
+        dataByName[field.name] = value;
+      }
+    });
+
+    const payload = {
+      values: dataByName,
+      ...(formPassword && { password: formPassword }),
+    };
+
     try {
-      await PublicFormsService.submitForm(id, {
-        values: submissionData,
-      });
+      await PublicFormsService.submitForm(id, payload);
+      setIsSubmitted(true);
+      setSubmissionData({});
       toast.success("Formulário enviado com sucesso!");
-    } catch {
+    } catch (error) {
+      console.error("Erro ao enviar:", error);
       toast.error("Erro ao enviar formulário. Tente novamente.");
+    } finally {
+      setIsSubmitting(false);
     }
   };
 
@@ -115,7 +150,34 @@ export default function PublicFormPage({ params }: PublicFormPageProps) {
   }
 
   if (showPasswordPrompt) {
-    return <PasswordProtection onPasswordSubmit={handlePasswordSubmit} />;
+    return (
+      <div className="min-h-screen flex items-center justify-center p-4">
+        <div className="w-full max-w-md">
+          <PasswordProtection onPasswordSubmit={handlePasswordSubmit} />
+        </div>
+      </div>
+    );
+  }
+
+  if (isSubmitted) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <div className="text-center max-w-md">
+          <div className="inline-flex items-center justify-center w-16 h-16 rounded-full bg-green-100 dark:bg-green-900/20 mb-4">
+            <svg className="w-8 h-8 text-green-600 dark:text-green-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+            </svg>
+          </div>
+          <h2 className="text-2xl font-bold mb-2">Formulário enviado!</h2>
+          <p className="text-muted-foreground mb-6">
+            Sua resposta foi registrada com sucesso. Obrigado por participar!
+          </p>
+          <Button onClick={() => setIsSubmitted(false)} variant="outline">
+            Enviar outra resposta
+          </Button>
+        </div>
+      </div>
+    );
   }
 
   return (
@@ -126,6 +188,7 @@ export default function PublicFormPage({ params }: PublicFormPageProps) {
       formData={submissionData}
       onFieldChange={handleFieldChange}
       onSubmit={handleSubmit}
+      isSubmitting={isSubmitting}
       showPreviewHeader={false}
     />
   );

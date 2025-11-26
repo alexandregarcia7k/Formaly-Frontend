@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useCallback } from "react";
+import { useState, useCallback, useEffect } from "react";
 import { Edit, Eye } from "lucide-react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
@@ -40,7 +40,14 @@ export function ResponseDetailsDialog({
   onSave,
 }: ResponseDetailsDialogProps) {
   const [isEditMode, setIsEditMode] = useState(false);
-  const [formData, setFormData] = useState<Record<string, unknown>>(response?.data || {});
+  const [formData, setFormData] = useState<Record<string, unknown>>({});
+
+  // Atualizar formData quando response mudar
+  useEffect(() => {
+    if (response?.data) {
+      setFormData(response.data);
+    }
+  }, [response]);
 
   // Resetar estado ao abrir/fechar
   const handleOpenChange = (open: boolean) => {

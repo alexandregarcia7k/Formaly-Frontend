@@ -5,7 +5,7 @@ import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { toast } from "sonner";
-import { FieldType } from "@/components/form-builder/FormFieldTypes";
+import { FieldType } from "@/types/field-types";
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
 

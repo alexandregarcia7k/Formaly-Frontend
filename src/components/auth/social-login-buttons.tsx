@@ -1,13 +1,16 @@
 "use client";
 
 import { Button } from "@/components/ui/button";
-import { useRouter } from "next/navigation";
+import { signIn } from "next-auth/react";
+import { toast } from "sonner";
 
 export function SocialLoginButtons() {
-  const router = useRouter();
-
-  const handleSocialLogin = () => {
-    router.push("/dashboard");
+  const handleSocialLogin = async (provider: "google" | "github" | "facebook") => {
+    try {
+      await signIn(provider, { callbackUrl: "/dashboard" });
+    } catch {
+      toast.error("Erro ao fazer login. Tente novamente.");
+    }
   };
 
   return (
@@ -20,7 +23,7 @@ export function SocialLoginButtons() {
           variant="outline"
           className="h-16 w-full p-0"
           aria-label="Continuar com Google"
-          onClick={handleSocialLogin}
+          onClick={() => handleSocialLogin("google")}
         >
           <svg
             xmlns="http://www.w3.org/2000/svg"
@@ -54,7 +57,7 @@ export function SocialLoginButtons() {
           variant="outline"
           className="h-16 w-full p-0"
           aria-label="Continuar com GitHub"
-          onClick={handleSocialLogin}
+          onClick={() => handleSocialLogin("github")}
         >
           <svg
             xmlns="http://www.w3.org/2000/svg"
@@ -75,7 +78,7 @@ export function SocialLoginButtons() {
           variant="outline"
           className="h-16 w-full p-0"
           aria-label="Continuar com Facebook"
-          onClick={handleSocialLogin}
+          onClick={() => handleSocialLogin("facebook")}
         >
           <svg
             xmlns="http://www.w3.org/2000/svg"
