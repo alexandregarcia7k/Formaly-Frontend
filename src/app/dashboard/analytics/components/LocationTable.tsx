@@ -4,7 +4,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { MapPin, Medal, Award, Trophy, Lightbulb } from "lucide-react";
 
 interface LocationData {
-  estado: string;
+  state: string;
   acessos: number;
   respostas: number;
   taxa: number;
@@ -68,10 +68,10 @@ export function LocationTable({ data }: LocationTableProps) {
             const medalColor = index < 3 ? medalColors[index] : "";
             
             return (
-              <div key={`${item.estado}-${index}`} className="grid grid-cols-4 gap-4 items-center">
+              <div key={`${item.state}-${index}`} className="grid grid-cols-4 gap-4 items-center">
                 <div className="flex items-center gap-2">
                   {MedalIcon && <MedalIcon className={`h-4 w-4 ${medalColor}`} />}
-                  <span className="font-medium">{item.estado}</span>
+                  <span className="font-medium">{item.state}</span>
                 </div>
               <div className="text-right text-muted-foreground">
                 {item.acessos.toLocaleString()}
@@ -96,7 +96,7 @@ export function LocationTable({ data }: LocationTableProps) {
 
           <div className="mt-4 pt-4 border-t flex items-center gap-2 text-sm text-muted-foreground">
             <Lightbulb className="h-4 w-4 text-amber-500" />
-            {bestConversion.estado} tem a melhor taxa de conversão ({bestConversion.taxa}%)
+            {bestConversion.state} tem a melhor taxa de conversão ({bestConversion.taxa}%)
           </div>
         </div>
       </CardContent>

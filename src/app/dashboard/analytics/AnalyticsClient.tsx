@@ -23,7 +23,6 @@ import {
   useFunnelData,
   useHeatmapData,
   useLocationData,
-  useFieldPerformance,
   useFormRanking,
 } from "@/hooks/useAnalytics";
 import type { Period } from "@/lib/services/analytics.service";
@@ -31,15 +30,14 @@ import type { Period } from "@/lib/services/analytics.service";
 export function AnalyticsClient() {
   const [timeRange, setTimeRange] = useState<Period>("30d");
 
-  const { data: stats, isLoading: isLoadingKPIs, error: errorKPIs } = useAnalyticsKPIs(timeRange);
+  const { data: kpisData, isLoading: isLoadingKPIs, error: errorKPIs } = useAnalyticsKPIs(timeRange);
   const { data: temporalData, isLoading: isLoadingTemporal, error: errorTemporal } = useTemporalData(timeRange);
   const { data: deviceData, isLoading: isLoadingDevice, error: errorDevice } = useDeviceData(timeRange);
   const { data: browserData, isLoading: isLoadingBrowser, error: errorBrowser } = useBrowserData(timeRange);
   const { data: funnelData, isLoading: isLoadingFunnel, error: errorFunnel } = useFunnelData(timeRange);
   const { data: heatmapData, isLoading: isLoadingHeatmap, error: errorHeatmap } = useHeatmapData(timeRange);
   const { data: locationData, isLoading: isLoadingLocation, error: errorLocation } = useLocationData(timeRange);
-  const { data: fieldData, isLoading: isLoadingField, error: errorField } = useFieldPerformance(timeRange);
-  const { data: formRankingData, isLoading: isLoadingRanking, error: errorRanking } = useFormRanking(timeRange, 5);
+  const { data: formRankingData, isLoading: isLoadingRanking, error: errorRanking } = useFormRanking(timeRange);
 
   const isLoading = isLoadingKPIs || isLoadingTemporal || isLoadingDevice || isLoadingBrowser;
   const hasError = errorKPIs || errorTemporal || errorDevice || errorBrowser;
@@ -58,7 +56,7 @@ export function AnalyticsClient() {
             Análise completa de desempenho dos seus formulários
           </p>
         </div>
-        <Select value={timeRange} onValueChange={setTimeRange}>
+        <Select value={timeRange} onValueChange={(value) => setTimeRange(value as Period)}>
           <SelectTrigger className="w-full sm:w-[180px]">
             <SelectValue />
           </SelectTrigger>
@@ -72,31 +70,71 @@ export function AnalyticsClient() {
       </div>
 
       {/* KPIs */}
-      <SectionCards stats={stats} />
+      {kpisData && (
+        <SectionCards
+          stats={[
+            {
+              title: "Crescimento",
+              value: kpisData.growth.value,
+              trend: {
+                value: `${kpisData.growth.trend > 0 ? '+' : ''}${kpisData.growth.trend}%`,
+                isPositive: kpisData.growth.isPositive,
+              },
+              description: kpisData.growth.description || "Total de respostas",
+              footer: "vs período anterior",
+            },
+            {
+              title: "Taxa de Conversão",
+              value: `${kpisData.conversionRate.value}%`,
+              trend: {
+                value: `${kpisData.conversionRate.trend > 0 ? '+' : ''}${kpisData.conversionRate.trend}pp`,
+                isPositive: kpisData.conversionRate.isPositive,
+              },
+              description: kpisData.conversionRate.description || "Taxa de conclusão",
+              footer: "vs período anterior",
+            },
+            {
+              title: "Tempo Médio",
+              value: kpisData.averageTime.value,
+              trend: {
+                value: `${kpisData.averageTime.trend}s`,
+                isPositive: kpisData.averageTime.isPositive,
+              },
+              description: kpisData.averageTime.description || "Tempo de preenchimento",
+              footer: "vs período anterior",
+            },
+            {
+              title: "Engajamento",
+              value: kpisData.engagement.value,
+              description: kpisData.engagement.description || "Score de engajamento",
+              footer: "Baseado em interações",
+            },
+          ]}
+        />
+      )}
 
       {/* Temporal Chart */}
-      <TemporalChart data={temporalData} timeRange={timeRange} />
+      <TemporalChart data={temporalData?.data || []} timeRange={timeRange} />
 
       {/* Device & Browser Charts */}
       <div className="grid gap-4 md:grid-cols-2">
-        <DeviceChart data={deviceData} />
-        <BrowserChart data={browserData} />
+        <DeviceChart data={deviceData?.data || []} />
+        <BrowserChart data={browserData?.data || []} />
       </div>
 
       {/* Heatmap */}
-      <ActivityHeatmap data={heatmapData} />
+      <ActivityHeatmap data={heatmapData?.data || []} />
 
       {/* Location Table */}
-      <LocationTable data={locationData} />
+      <LocationTable data={locationData?.data || []} />
 
       {/* Conversion Funnel */}
-      <ConversionFunnel data={funnelData} />
+      <ConversionFunnel data={funnelData?.data || []} />
 
-      {/* Field Performance */}
-      <FieldPerformanceTable data={fieldData} />
+      {/* Field Performance - Removido (endpoint não existe) */}
 
       {/* Form Ranking */}
-      <FormRankingTable data={formRankingData} />
+      <FormRankingTable data={formRankingData?.data || []} />
     </div>
   );
 }

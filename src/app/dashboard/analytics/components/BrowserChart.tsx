@@ -6,8 +6,16 @@ import { Pie, PieChart, Cell, Legend } from "recharts";
 import { Globe, Lightbulb } from "lucide-react";
 
 interface BrowserChartProps {
-  data: { name: string; value: number; color: string }[];
+  data: { name: string; value: number; count: number }[];
 }
+
+const BROWSER_COLORS: Record<string, string> = {
+  chrome: "hsl(var(--chart-1))",
+  safari: "hsl(var(--chart-2))",
+  firefox: "hsl(var(--chart-3))",
+  edge: "hsl(var(--chart-4))",
+  outros: "hsl(var(--chart-5))",
+};
 
 export function BrowserChart({ data }: BrowserChartProps) {
   // Validação: array vazio
@@ -33,7 +41,12 @@ export function BrowserChart({ data }: BrowserChartProps) {
     );
   }
 
-  const chartConfig = data.reduce((acc, item) => {
+  const chartData = data.map((item) => ({
+    ...item,
+    color: BROWSER_COLORS[item.name.toLowerCase()] || "hsl(var(--chart-5))",
+  }));
+
+  const chartConfig = chartData.reduce((acc, item) => {
     acc[item.name.toLowerCase()] = {
       label: item.name,
       color: item.color,
@@ -41,7 +54,7 @@ export function BrowserChart({ data }: BrowserChartProps) {
     return acc;
   }, {} as Record<string, { label: string; color: string }>);
 
-  const topBrowser = data.reduce((max, item) => item.value > max.value ? item : max, data[0]);
+  const topBrowser = chartData.reduce((max, item) => item.value > max.value ? item : max, chartData[0]);
 
   return (
     <Card>
@@ -58,7 +71,7 @@ export function BrowserChart({ data }: BrowserChartProps) {
         <ChartContainer config={chartConfig} className="h-[250px] w-full">
           <PieChart>
             <Pie
-              data={data}
+              data={chartData}
               cx="50%"
               cy="50%"
               innerRadius={60}
@@ -66,7 +79,7 @@ export function BrowserChart({ data }: BrowserChartProps) {
               paddingAngle={2}
               dataKey="value"
             >
-              {data.map((entry, index) => (
+              {chartData.map((entry, index) => (
                 <Cell key={`cell-${index}`} fill={entry.color} />
               ))}
             </Pie>

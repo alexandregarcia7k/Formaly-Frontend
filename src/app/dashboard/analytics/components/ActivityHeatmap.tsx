@@ -4,13 +4,8 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Calendar } from "lucide-react";
 import { cn } from "@/lib/utils";
 
-interface HeatmapData {
-  day: string;
-  data: { hour: number; value: number }[];
-}
-
 interface ActivityHeatmapProps {
-  data: HeatmapData[];
+  data: { day: string; hours: { hour: number; count: number }[] }[];
 }
 
 export function ActivityHeatmap({ data }: ActivityHeatmapProps) {
@@ -48,8 +43,8 @@ export function ActivityHeatmap({ data }: ActivityHeatmapProps) {
   };
 
   const bestDay = data.reduce((max, d) => {
-    const dayTotal = d.data.reduce((sum, h) => sum + h.value, 0);
-    const maxTotal = max.data.reduce((sum, h) => sum + h.value, 0);
+    const dayTotal = d.hours.reduce((sum, h) => sum + h.count, 0);
+    const maxTotal = max.hours.reduce((sum, h) => sum + h.count, 0);
     return dayTotal > maxTotal ? d : max;
   }, data[0]);
 
@@ -84,21 +79,21 @@ export function ActivityHeatmap({ data }: ActivityHeatmapProps) {
                   {dayData.day}
                 </div>
                 <div className="flex flex-1 gap-1">
-                  {dayData.data
+                  {dayData.hours
                     .filter((h) => hours.includes(h.hour))
                     .map((hourData) => (
                       <div
                         key={hourData.hour}
                         className={cn(
                           "flex-1 h-8 rounded transition-colors",
-                          getIntensityClass(hourData.value)
+                          getIntensityClass(hourData.count)
                         )}
-                        title={`${dayData.day} ${hourData.hour}h: ${hourData.value} respostas`}
+                        title={`${dayData.day} ${hourData.hour}h: ${hourData.count} respostas`}
                       />
                     ))}
                 </div>
                 <div className="w-16 text-right text-xs text-muted-foreground">
-                  {dayData.data.reduce((sum, h) => sum + h.value, 0)} resp.
+                  {dayData.hours.reduce((sum, h) => sum + h.count, 0)} resp.
                 </div>
               </div>
             ))}

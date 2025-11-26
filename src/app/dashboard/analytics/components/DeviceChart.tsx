@@ -6,8 +6,14 @@ import { Pie, PieChart, Cell, Legend } from "recharts";
 import { Smartphone, Lightbulb } from "lucide-react";
 
 interface DeviceChartProps {
-  data: { name: string; value: number; color: string }[];
+  data: { name: string; value: number; count: number }[];
 }
+
+const DEVICE_COLORS: Record<string, string> = {
+  mobile: "hsl(var(--chart-1))",
+  desktop: "hsl(var(--chart-2))",
+  tablet: "hsl(var(--chart-3))",
+};
 
 export function DeviceChart({ data }: DeviceChartProps) {
   // Validação: array vazio
@@ -33,7 +39,12 @@ export function DeviceChart({ data }: DeviceChartProps) {
     );
   }
 
-  const chartConfig = data.reduce((acc, item) => {
+  const chartData = data.map((item) => ({
+    ...item,
+    color: DEVICE_COLORS[item.name.toLowerCase()] || "hsl(var(--chart-4))",
+  }));
+
+  const chartConfig = chartData.reduce((acc, item) => {
     acc[item.name.toLowerCase()] = {
       label: item.name,
       color: item.color,
@@ -41,7 +52,7 @@ export function DeviceChart({ data }: DeviceChartProps) {
     return acc;
   }, {} as Record<string, { label: string; color: string }>);
 
-  const topDevice = data.reduce((max, item) => item.value > max.value ? item : max, data[0]);
+  const topDevice = chartData.reduce((max, item) => item.value > max.value ? item : max, chartData[0]);
 
   return (
     <Card>
@@ -58,7 +69,7 @@ export function DeviceChart({ data }: DeviceChartProps) {
         <ChartContainer config={chartConfig} className="h-[250px] w-full">
           <PieChart>
             <Pie
-              data={data}
+              data={chartData}
               cx="50%"
               cy="50%"
               innerRadius={60}
@@ -66,7 +77,7 @@ export function DeviceChart({ data }: DeviceChartProps) {
               paddingAngle={2}
               dataKey="value"
             >
-              {data.map((entry, index) => (
+              {chartData.map((entry, index) => (
                 <Cell key={`cell-${index}`} fill={entry.color} />
               ))}
             </Pie>

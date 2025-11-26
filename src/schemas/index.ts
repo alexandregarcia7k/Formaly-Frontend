@@ -18,4 +18,45 @@ export * from "./response.schema";
 
 // Dashboard schemas
 export * from "./dashboard.schema";
-export * from "./auth.schema";
+
+// Analytics schemas
+export { periodSchema as analyticsPeriodSchema } from "./analytics.schema";
+export type { Period as AnalyticsPeriod } from "./analytics.schema";
+export {
+  temporalDataPointSchema,
+  temporalDataResponseSchema,
+  deviceDataItemSchema,
+  deviceDataResponseSchema,
+  browserDataItemSchema,
+  browserDataResponseSchema,
+  funnelStepSchema,
+  funnelDataResponseSchema,
+  heatmapHourSchema,
+  heatmapDaySchema,
+  heatmapDataResponseSchema,
+  locationDataItemSchema,
+  locationDataResponseSchema,
+  kpiMetricSchema,
+  kpisResponseSchema,
+  formRankingItemSchema,
+  formRankingResponseSchema,
+} from "./analytics.schema";
+export type {
+  TemporalDataPoint,
+  TemporalDataResponse,
+  DeviceDataItem,
+  DeviceDataResponse,
+  BrowserDataItem,
+  BrowserDataResponse,
+  FunnelStep,
+  FunnelDataResponse,
+  HeatmapHour,
+  HeatmapDay,
+  HeatmapDataResponse,
+  LocationDataItem,
+  LocationDataResponse,
+  KPIMetric,
+  KPIsResponse,
+  FormRankingItem,
+  FormRankingResponse,
+} from "./analytics.schema";

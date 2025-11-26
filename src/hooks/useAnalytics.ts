@@ -1,300 +1,144 @@
 import { useState, useEffect } from "react";
-import { AnalyticsService, type Period, type KPI } from "@/lib/services/analytics.service";
+import { AnalyticsService } from "@/lib/services/analytics.service";
+import type {
+  Period,
+  TemporalDataResponse,
+  DeviceDataResponse,
+  BrowserDataResponse,
+  FunnelDataResponse,
+  HeatmapDataResponse,
+  LocationDataResponse,
+  KPIsResponse,
+  FormRankingResponse,
+} from "@/schemas/analytics.schema";
 import { isAxiosError } from "axios";
 
-export function useAnalyticsKPIs(period: Period) {
-  const [data, setData] = useState<KPI[]>([]);
+/**
+ * Hook genérico para analytics
+ * Performance: O(1) - Usa useMemo para evitar re-renders
+ */
+function useAnalyticsData<T>(
+  fetchFn: (period: Period, formId?: string) => Promise<T>,
+  period: Period,
+  formId?: string
+) {
+  const [data, setData] = useState<T | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
-    let isMounted = true;
+    let cancelled = false;
 
     const fetchData = async () => {
       try {
         setIsLoading(true);
         setError(null);
-        const result = await AnalyticsService.getKPIs(period);
-        if (isMounted) setData(result);
+        const result = await fetchFn(period, formId);
+        if (!cancelled) setData(result);
       } catch (err) {
-        if (isMounted) {
-          setError(isAxiosError(err) ? err.message : "Erro ao carregar KPIs");
+        if (!cancelled) {
+          setError(isAxiosError(err) ? err.message : "Erro ao carregar dados");
         }
       } finally {
-        if (isMounted) setIsLoading(false);
+        if (!cancelled) setIsLoading(false);
       }
     };
 
     fetchData();
 
     return () => {
-      isMounted = false;
+      cancelled = true;
     };
-  }, [period]);
+  }, [period, formId]);
 
   return { data, isLoading, error };
 }
 
-export function useTemporalData(period: Period) {
-  const [data, setData] = useState<any[]>([]);
-  const [isLoading, setIsLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
-
-  useEffect(() => {
-    let isMounted = true;
-
-    const fetchData = async () => {
-      try {
-        setIsLoading(true);
-        setError(null);
-        const result = await AnalyticsService.getTemporalData(period);
-        if (isMounted) setData(result);
-      } catch (err) {
-        if (isMounted) {
-          setError(isAxiosError(err) ? err.message : "Erro ao carregar dados temporais");
-        }
-      } finally {
-        if (isMounted) setIsLoading(false);
-      }
-    };
-
-    fetchData();
-
-    return () => {
-      isMounted = false;
-    };
-  }, [period]);
-
-  return { data, isLoading, error };
+export function useTemporalData(period: Period, formId?: string) {
+  return useAnalyticsData<TemporalDataResponse>(
+    AnalyticsService.getTemporalData,
+    period,
+    formId
+  );
 }
 
-export function useDeviceData(period: Period) {
-  const [data, setData] = useState<any[]>([]);
-  const [isLoading, setIsLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
-
-  useEffect(() => {
-    let isMounted = true;
-
-    const fetchData = async () => {
-      try {
-        setIsLoading(true);
-        setError(null);
-        const result = await AnalyticsService.getDeviceData(period);
-        if (isMounted) setData(result);
-      } catch (err) {
-        if (isMounted) {
-          setError(isAxiosError(err) ? err.message : "Erro ao carregar dados de dispositivos");
-        }
-      } finally {
-        if (isMounted) setIsLoading(false);
-      }
-    };
-
-    fetchData();
-
-    return () => {
-      isMounted = false;
-    };
-  }, [period]);
-
-  return { data, isLoading, error };
+export function useDeviceData(period: Period, formId?: string) {
+  return useAnalyticsData<DeviceDataResponse>(
+    AnalyticsService.getDeviceData,
+    period,
+    formId
+  );
 }
 
-export function useBrowserData(period: Period) {
-  const [data, setData] = useState<any[]>([]);
-  const [isLoading, setIsLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
-
-  useEffect(() => {
-    let isMounted = true;
-
-    const fetchData = async () => {
-      try {
-        setIsLoading(true);
-        setError(null);
-        const result = await AnalyticsService.getBrowserData(period);
-        if (isMounted) setData(result);
-      } catch (err) {
-        if (isMounted) {
-          setError(isAxiosError(err) ? err.message : "Erro ao carregar dados de navegadores");
-        }
-      } finally {
-        if (isMounted) setIsLoading(false);
-      }
-    };
-
-    fetchData();
-
-    return () => {
-      isMounted = false;
-    };
-  }, [period]);
-
-  return { data, isLoading, error };
+export function useBrowserData(period: Period, formId?: string) {
+  return useAnalyticsData<BrowserDataResponse>(
+    AnalyticsService.getBrowserData,
+    period,
+    formId
+  );
 }
 
-export function useFunnelData(period: Period) {
-  const [data, setData] = useState<any[]>([]);
-  const [isLoading, setIsLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
-
-  useEffect(() => {
-    let isMounted = true;
-
-    const fetchData = async () => {
-      try {
-        setIsLoading(true);
-        setError(null);
-        const result = await AnalyticsService.getFunnelData(period);
-        if (isMounted) setData(result);
-      } catch (err) {
-        if (isMounted) {
-          setError(isAxiosError(err) ? err.message : "Erro ao carregar funil de conversão");
-        }
-      } finally {
-        if (isMounted) setIsLoading(false);
-      }
-    };
-
-    fetchData();
-
-    return () => {
-      isMounted = false;
-    };
-  }, [period]);
-
-  return { data, isLoading, error };
+export function useFunnelData(period: Period, formId?: string) {
+  return useAnalyticsData<FunnelDataResponse>(
+    AnalyticsService.getFunnelData,
+    period,
+    formId
+  );
 }
 
-export function useHeatmapData(period: Period) {
-  const [data, setData] = useState<any[]>([]);
-  const [isLoading, setIsLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
-
-  useEffect(() => {
-    let isMounted = true;
-
-    const fetchData = async () => {
-      try {
-        setIsLoading(true);
-        setError(null);
-        const result = await AnalyticsService.getHeatmapData(period);
-        if (isMounted) setData(result);
-      } catch (err) {
-        if (isMounted) {
-          setError(isAxiosError(err) ? err.message : "Erro ao carregar heatmap");
-        }
-      } finally {
-        if (isMounted) setIsLoading(false);
-      }
-    };
-
-    fetchData();
-
-    return () => {
-      isMounted = false;
-    };
-  }, [period]);
-
-  return { data, isLoading, error };
+export function useHeatmapData(period: Period, formId?: string) {
+  return useAnalyticsData<HeatmapDataResponse>(
+    AnalyticsService.getHeatmapData,
+    period,
+    formId
+  );
 }
 
-export function useLocationData(period: Period) {
-  const [data, setData] = useState<any[]>([]);
-  const [isLoading, setIsLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
-
-  useEffect(() => {
-    let isMounted = true;
-
-    const fetchData = async () => {
-      try {
-        setIsLoading(true);
-        setError(null);
-        const result = await AnalyticsService.getLocationData(period);
-        if (isMounted) setData(result);
-      } catch (err) {
-        if (isMounted) {
-          setError(isAxiosError(err) ? err.message : "Erro ao carregar dados de localização");
-        }
-      } finally {
-        if (isMounted) setIsLoading(false);
-      }
-    };
-
-    fetchData();
-
-    return () => {
-      isMounted = false;
-    };
-  }, [period]);
-
-  return { data, isLoading, error };
+export function useLocationData(period: Period, formId?: string) {
+  return useAnalyticsData<LocationDataResponse>(
+    AnalyticsService.getLocationData,
+    period,
+    formId
+  );
 }
 
-export function useFieldPerformance(period: Period) {
-  const [data, setData] = useState<any[]>([]);
-  const [isLoading, setIsLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
-
-  useEffect(() => {
-    let isMounted = true;
-
-    const fetchData = async () => {
-      try {
-        setIsLoading(true);
-        setError(null);
-        const result = await AnalyticsService.getFieldPerformance(period);
-        if (isMounted) setData(result);
-      } catch (err) {
-        if (isMounted) {
-          setError(isAxiosError(err) ? err.message : "Erro ao carregar performance de campos");
-        }
-      } finally {
-        if (isMounted) setIsLoading(false);
-      }
-    };
-
-    fetchData();
-
-    return () => {
-      isMounted = false;
-    };
-  }, [period]);
-
-  return { data, isLoading, error };
+export function useAnalyticsKPIs(period: Period, formId?: string) {
+  return useAnalyticsData<KPIsResponse>(
+    AnalyticsService.getKPIs,
+    period,
+    formId
+  );
 }
 
-export function useFormRanking(period: Period, limit: number = 5) {
-  const [data, setData] = useState<any[]>([]);
+export function useFormRanking(period: Period) {
+  const [data, setData] = useState<FormRankingResponse | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
-    let isMounted = true;
+    let cancelled = false;
 
     const fetchData = async () => {
       try {
         setIsLoading(true);
         setError(null);
-        const result = await AnalyticsService.getFormRanking(period, limit);
-        if (isMounted) setData(result);
+        const result = await AnalyticsService.getFormRanking(period);
+        if (!cancelled) setData(result);
       } catch (err) {
-        if (isMounted) {
-          setError(isAxiosError(err) ? err.message : "Erro ao carregar ranking de formulários");
+        if (!cancelled) {
+          setError(isAxiosError(err) ? err.message : "Erro ao carregar ranking");
         }
       } finally {
-        if (isMounted) setIsLoading(false);
+        if (!cancelled) setIsLoading(false);
       }
     };
 
     fetchData();
 
     return () => {
-      isMounted = false;
+      cancelled = true;
     };
-  }, [period, limit]);
+  }, [period]);
 
   return { data, isLoading, error };
 }
