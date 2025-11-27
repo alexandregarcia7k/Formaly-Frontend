@@ -1,7 +1,6 @@
-import { auth, signOut } from "@/lib/auth"
+import { auth } from "@/lib/auth"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
-import { Button } from "@/components/ui/button"
-import { LogOut } from "lucide-react"
+import { LogoutButton } from "@/components/auth/logout-button"
 
 export async function UserButton() {
   const session = await auth()
@@ -28,16 +27,7 @@ export async function UserButton() {
         </div>
       </div>
 
-      <form
-        action={async () => {
-          "use server"
-          await signOut({ redirectTo: "/" })
-        }}
-      >
-        <Button type="submit" variant="ghost" size="icon" title="Sair">
-          <LogOut className="h-4 w-4" />
-        </Button>
-      </form>
+      <LogoutButton />
     </div>
   )
 }

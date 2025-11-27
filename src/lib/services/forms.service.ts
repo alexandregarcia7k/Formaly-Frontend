@@ -180,7 +180,11 @@ export class FormsService {
 
   /** @deprecated Use getAll() */
   static async listForms(page: number = 1): Promise<PaginatedForms> {
-    return this.getAll({ page, pageSize: 15, searchIn: "form", status: "all", sortBy: "createdAt", sortOrder: "desc" });
+    console.log('[FormsService] Chamando listForms, page:', page);
+    // Testar sem filtros primeiro
+    const result = await this.getAll({ page, pageSize: 15 });
+    console.log('[FormsService] Resultado:', result);
+    return result;
   }
 
   /** @deprecated Use getById() */

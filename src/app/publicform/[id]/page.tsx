@@ -44,13 +44,7 @@ export default function PublicFormPage({ params }: PublicFormPageProps) {
         name: response.name,
         description: response.description || "",
         fields: response.fields
-          .filter((field) => {
-            if (!isValidFieldType(field.type)) {
-              console.warn(`Campo com tipo inválido ignorado: ${field.type}`);
-              return false;
-            }
-            return true;
-          })
+          .filter((field) => isValidFieldType(field.type))
           .map((field) => ({
             id: field.id,
             type: field.type as FormField["type"],
@@ -113,8 +107,7 @@ export default function PublicFormPage({ params }: PublicFormPageProps) {
       setIsSubmitted(true);
       setSubmissionData({});
       toast.success("Formulário enviado com sucesso!");
-    } catch (error) {
-      console.error("Erro ao enviar:", error);
+    } catch {
       toast.error("Erro ao enviar formulário. Tente novamente.");
     } finally {
       setIsSubmitting(false);

@@ -11,24 +11,38 @@ import Link from "next/link";
 import { toast } from "sonner";
 import { useState } from "react";
 import { AuthService } from "@/lib/services/auth.service";
-import { useRouter } from "next/navigation";
 import { signIn } from "next-auth/react";
 import { loginSchema, registerSchema } from "@/schemas";
+import { tokenManager } from "@/lib/token-manager";
+import type { AxiosError } from "axios";
+
+interface BackendError {
+  statusCode: number;
+  message: string;
+  error: string;
+}
 
 export default function LoginPage() {
-  const router = useRouter();
   const [isLoading, setIsLoading] = useState(false);
+  
+  // Login state
+  const [loginEmail, setLoginEmail] = useState("");
+  const [loginPassword, setLoginPassword] = useState("");
+  
+  // Register state
+  const [registerName, setRegisterName] = useState("");
+  const [registerEmail, setRegisterEmail] = useState("");
+  const [registerPassword, setRegisterPassword] = useState("");
+  const [registerConfirmPassword, setRegisterConfirmPassword] = useState("");
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
-    const formData = new FormData(e.currentTarget as HTMLFormElement);
     
-    const data = {
-      email: formData.get("email") as string,
-      password: formData.get("password") as string,
-    };
-
-    const validation = loginSchema.safeParse(data);
+    const validation = loginSchema.safeParse({
+      email: loginEmail,
+      password: loginPassword,
+    });
+    
     if (!validation.success) {
       toast.error(validation.error.errors[0].message);
       return;
@@ -43,12 +57,13 @@ export default function LoginPage() {
       });
 
       if (result?.error) {
-        toast.error("Email ou senha inválidos");
+        toast.error(result.error === "CredentialsSignin" ? "Email ou senha inválidos" : result.error);
         return;
       }
 
+      await tokenManager.getToken(true);
       toast.success("Login realizado com sucesso!");
-      router.push("/dashboard");
+      window.location.href = "/dashboard";
     } catch {
       toast.error("Erro ao fazer login");
     } finally {
@@ -58,16 +73,14 @@ export default function LoginPage() {
 
   const handleRegister = async (e: React.FormEvent) => {
     e.preventDefault();
-    const formData = new FormData(e.currentTarget as HTMLFormElement);
     
-    const data = {
-      name: formData.get("name") as string,
-      email: formData.get("email") as string,
-      password: formData.get("password") as string,
-      confirmPassword: formData.get("confirmPassword") as string,
-    };
-
-    const validation = registerSchema.safeParse(data);
+    const validation = registerSchema.safeParse({
+      name: registerName,
+      email: registerEmail,
+      password: registerPassword,
+      confirmPassword: registerConfirmPassword,
+    });
+    
     if (!validation.success) {
       toast.error(validation.error.errors[0].message);
       return;
@@ -80,10 +93,26 @@ export default function LoginPage() {
         email: validation.data.email,
         password: validation.data.password,
       });
+      
       toast.success("Cadastro realizado com sucesso!");
+      
+      const result = await signIn("credentials", {
+        email: validation.data.email,
+        password: validation.data.password,
+        redirect: false,
+      });
+      
+      if (result?.error) {
+        toast.error("Erro ao fazer login automático. Tente fazer login manualmente.");
+        return;
+      }
+
+      await tokenManager.getToken(true);
       window.location.href = "/dashboard";
     } catch (error) {
-      toast.error(error instanceof Error ? error.message : "Erro ao fazer cadastro");
+      const axiosError = error as AxiosError<BackendError>;
+      const message = axiosError.response?.data?.message || "Erro ao fazer cadastro";
+      toast.error(message);
     } finally {
       setIsLoading(false);
     }
@@ -137,10 +166,12 @@ export default function LoginPage() {
                   <Input
                     type="email"
                     required
-                    name="email"
                     id="email"
                     placeholder="seu@email.com"
                     className="h-12 text-base"
+                    value={loginEmail}
+                    onChange={(e) => setLoginEmail(e.target.value)}
+                    disabled={isLoading}
                   />
                 </div>
 
@@ -151,10 +182,12 @@ export default function LoginPage() {
                   <Input
                     type="password"
                     required
-                    name="password"
                     id="password"
                     placeholder="••••••••"
                     className="h-12 text-base"
+                    value={loginPassword}
+                    onChange={(e) => setLoginPassword(e.target.value)}
+                    disabled={isLoading}
                   />
                 </div>
 
@@ -191,10 +224,12 @@ export default function LoginPage() {
                   <Input
                     type="text"
                     required
-                    name="name"
                     id="register-name"
                     placeholder="Seu nome"
                     className="h-12 text-base"
+                    value={registerName}
+                    onChange={(e) => setRegisterName(e.target.value)}
+                    disabled={isLoading}
                   />
                 </div>
 
@@ -208,10 +243,12 @@ export default function LoginPage() {
                   <Input
                     type="email"
                     required
-                    name="email"
                     id="register-email"
                     placeholder="seu@email.com"
                     className="h-12 text-base"
+                    value={registerEmail}
+                    onChange={(e) => setRegisterEmail(e.target.value)}
+                    disabled={isLoading}
                   />
                 </div>
 
@@ -225,10 +262,12 @@ export default function LoginPage() {
                   <Input
                     type="password"
                     required
-                    name="password"
                     id="register-password"
                     placeholder="••••••••"
                     className="h-12 text-base"
+                    value={registerPassword}
+                    onChange={(e) => setRegisterPassword(e.target.value)}
+                    disabled={isLoading}
                   />
                 </div>
 
@@ -242,10 +281,12 @@ export default function LoginPage() {
                   <Input
                     type="password"
                     required
-                    name="confirmPassword"
                     id="register-confirm-password"
                     placeholder="••••••••"
                     className="h-12 text-base"
+                    value={registerConfirmPassword}
+                    onChange={(e) => setRegisterConfirmPassword(e.target.value)}
+                    disabled={isLoading}
                   />
                 </div>
 

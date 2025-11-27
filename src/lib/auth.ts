@@ -12,10 +12,18 @@ declare module "next-auth" {
     accessToken?: string;
     refreshToken?: string;
     expiresAt?: number;
+    backendToken?: string; // JWT do backend
+  }
+  interface JWT {
+    backendToken?: string;
+  }
+  interface User {
+    backendToken?: string; // Token retornado pelo authorize()
   }
 }
 
 export const { handlers, auth, signIn, signOut } = NextAuth({
+  trustHost: true, // Required for Auth.js v5
   providers: [
     Credentials({
       credentials: {
@@ -36,20 +44,27 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
             }),
           });
 
-          if (!res.ok) return null;
+          if (!res.ok) {
+            const error = await res.json().catch(() => ({ message: "Email ou senha inválidos" }));
+            throw new Error(error.message || "Email ou senha inválidos");
+          }
 
           const data = await res.json();
           
-          if (!data.user) return null;
+          if (!data.user) {
+            throw new Error("Resposta inválida do servidor");
+          }
 
+          // Retorna user + token do backend
           return {
             id: data.user.id,
             email: data.user.email,
             name: data.user.name,
             image: data.user.image,
+            backendToken: data.accessToken || data.access_token || data.token,
           };
-        } catch {
-          return null;
+        } catch (error) {
+          throw new Error(error instanceof Error ? error.message : "Erro ao fazer login");
         }
       },
     }),
@@ -78,28 +93,36 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
         token.refreshToken = account.refresh_token;
         token.expiresAt = account.expires_at;
 
-        // Sincronizar com backend
-        if (account.provider !== "credentials") {
-          try {
-            await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/auth/sync`, {
-              method: "POST",
-              headers: { "Content-Type": "application/json" },
-              credentials: "include",
-              body: JSON.stringify({
-                email: user.email,
-                name: user.name,
-                image: user.image,
-                provider: account.provider,
-                providerId: account.providerAccountId,
-                accessToken: account.access_token,
-                refreshToken: account.refresh_token,
-                expiresAt: account.expires_at,
-              }),
-            });
-          } catch {
-            // Silently fail - user can still use the app
-          }
+        // Se é Credentials, o token já vem do authorize()
+        if (account.provider === "credentials" && user.backendToken) {
+          token.backendToken = user.backendToken;
+          return token;
         }
+
+        // Se é OAuth, precisa sincronizar com backend
+        try {
+          const syncResponse = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/auth/sync`, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            credentials: "include",
+            body: JSON.stringify({
+              email: user.email,
+              name: user.name,
+              image: user.image,
+              provider: account.provider,
+              providerId: account.providerAccountId || user.id,
+              accessToken: account.access_token,
+              refreshToken: account.refresh_token,
+              expiresAt: account.expires_at,
+            }),
+          });
+
+          if (syncResponse.ok) {
+            const syncData = await syncResponse.json();
+            token.backendToken = syncData.access_token || syncData.token || syncData.accessToken;
+          }
+        } catch {}
+        
       }
       return token;
     },
@@ -110,6 +133,8 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
         session.accessToken = token.accessToken as string | undefined;
         session.refreshToken = token.refreshToken as string | undefined;
         session.expiresAt = token.expiresAt as number | undefined;
+        // Adiciona o JWT do backend na sessão
+        session.backendToken = token.backendToken as string | undefined;
       }
       return session;
     },

@@ -1,5 +1,6 @@
 import axios, { AxiosError, AxiosInstance, InternalAxiosRequestConfig, AxiosResponse } from "axios";
 import { toast } from "sonner";
+import { tokenManager } from "../token-manager";
 
 /**
  * Tipo de erro padronizado da API
@@ -28,10 +29,23 @@ const apiClient: AxiosInstance = axios.create({
 
 /**
  * Request Interceptor
- * - Log de requests (dev only)
+ * - Adiciona token JWT do backend em todas as requests
+ * - Usa Token Manager com cache para evitar múltiplas chamadas
+ * @see https://axios-http.com/docs/interceptors
  */
 apiClient.interceptors.request.use(
-  (config: InternalAxiosRequestConfig) => config,
+  async (config: InternalAxiosRequestConfig) => {
+    // Apenas no cliente (não no SSR)
+    if (typeof window !== "undefined") {
+      const token = await tokenManager.getToken();
+      
+      if (token) {
+        config.headers.Authorization = `Bearer ${token}`;
+      }
+    }
+    
+    return config;
+  },
   (error: AxiosError) => Promise.reject(error)
 );
 
@@ -47,18 +61,12 @@ apiClient.interceptors.response.use(
     const statusCode = error.response?.status;
     const errorData = error.response?.data;
 
-    // 401 - Não autenticado (apenas para rotas protegidas)
+    // 401 - Não autenticado
+    // Documentação Axios: SEMPRE propagar erro
+    // Proxy lida com redirecionamento automaticamente
     if (statusCode === 401) {
-      const isPublicRoute = typeof window !== "undefined" && 
-        (window.location.pathname.startsWith("/f/") || 
-         window.location.pathname.startsWith("/publicform/") ||
-         window.location.pathname === "/" ||
-         window.location.pathname === "/login");
-      
-      if (typeof window !== "undefined" && !isPublicRoute && !window.location.pathname.includes("/login")) {
-        toast.error("Sessão expirada. Faça login novamente.");
-        window.location.href = "/login";
-      }
+      // Não mostra toast, mas DEVE propagar erro
+      return Promise.reject(error);
     }
 
     // 429 - Rate limit

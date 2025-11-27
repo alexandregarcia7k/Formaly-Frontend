@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useCallback, useMemo } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { FormsService } from "@/lib/services/forms.service";
 import type { FormListItem, FormListQuery, PaginatedForms } from "@/schemas/form.schema";
 
@@ -42,16 +42,5 @@ export function useForms(query?: FormListQuery): UseFormsReturn {
     fetchForms();
   }, [fetchForms]);
 
-  const memoizedReturn = useMemo<UseFormsReturn>(
-    () => ({
-      forms,
-      isLoading,
-      error,
-      pagination,
-      refetch: fetchForms,
-    }),
-    [forms, isLoading, error, pagination, fetchForms]
-  );
-
-  return memoizedReturn;
+  return { forms, isLoading, error, pagination, refetch: fetchForms };
 }

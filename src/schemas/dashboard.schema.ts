@@ -23,7 +23,7 @@ export const latestResponseItemSchema = z.object({
   id: z.string().uuid(),
   formId: z.string().uuid(),
   formTitle: z.string(),
-  submittedAt: z.string(),
+  createdAt: z.string(),
   timeSpent: z.number().nullable().optional(),
   device: z.string().optional(),
   browser: z.string().optional(),
@@ -32,8 +32,8 @@ export const latestResponseItemSchema = z.object({
   formId: data.formId,
   formName: data.formTitle,
   isCompleted: true,
-  createdAt: new Date(data.submittedAt),
-  completedAt: new Date(data.submittedAt),
+  createdAt: new Date(data.createdAt),
+  completedAt: new Date(data.createdAt),
 }));
 
 /**
