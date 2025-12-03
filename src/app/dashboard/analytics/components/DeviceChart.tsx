@@ -10,9 +10,10 @@ interface DeviceChartProps {
 }
 
 const DEVICE_COLORS: Record<string, string> = {
-  mobile: "hsl(var(--chart-1))",
-  desktop: "hsl(var(--chart-2))",
-  tablet: "hsl(var(--chart-3))",
+  mobile: "hsl(142, 76%, 36%)",    // Verde vibrante
+  desktop: "hsl(221, 83%, 53%)",   // Azul royal
+  tablet: "hsl(280, 65%, 60%)",    // Roxo
+  unknown: "hsl(0, 0%, 60%)",      // Cinza
 };
 
 export function DeviceChart({ data }: DeviceChartProps) {
@@ -41,7 +42,7 @@ export function DeviceChart({ data }: DeviceChartProps) {
 
   const chartData = data.map((item) => ({
     ...item,
-    color: DEVICE_COLORS[item.name.toLowerCase()] || "hsl(var(--chart-4))",
+    color: DEVICE_COLORS[item.name.toLowerCase()] || "hsl(0, 0%, 60%)",
   }));
 
   const chartConfig = chartData.reduce((acc, item) => {

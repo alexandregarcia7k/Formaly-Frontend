@@ -9,7 +9,21 @@ interface ActivityHeatmapProps {
 }
 
 export function ActivityHeatmap({ data }: ActivityHeatmapProps) {
-  const hours = [0, 4, 8, 12, 16, 20];
+  // Intervalos de 4h com 2 blocos cada (0-2h, 2-4h, 4-6h, etc)
+  const timeBlocks = [
+    { start: 0, end: 2, label: '0h' },
+    { start: 2, end: 4, label: '' },
+    { start: 4, end: 6, label: '4h' },
+    { start: 6, end: 8, label: '' },
+    { start: 8, end: 10, label: '8h' },
+    { start: 10, end: 12, label: '' },
+    { start: 12, end: 14, label: '12h' },
+    { start: 14, end: 16, label: '' },
+    { start: 16, end: 18, label: '16h' },
+    { start: 18, end: 20, label: '' },
+    { start: 20, end: 22, label: '20h' },
+    { start: 22, end: 24, label: '' },
+  ];
   
   // Validação: array vazio
   if (!data || data.length === 0) {
@@ -42,11 +56,20 @@ export function ActivityHeatmap({ data }: ActivityHeatmapProps) {
     return "bg-primary/80";
   };
 
-  const bestDay = data.reduce((max, d) => {
-    const dayTotal = d.hours.reduce((sum, h) => sum + h.count, 0);
-    const maxTotal = max.hours.reduce((sum, h) => sum + h.count, 0);
-    return dayTotal > maxTotal ? d : max;
-  }, data[0]);
+  // Encontrar melhor dia e hora
+  let bestMoment = { day: '', hour: 0, count: 0 };
+  data.forEach((dayData) => {
+    dayData.hours.forEach((hourData) => {
+      if (hourData.count > bestMoment.count) {
+        bestMoment = { day: dayData.day, hour: hourData.hour, count: hourData.count };
+      }
+    });
+  });
+
+  const formatHourRange = (hour: number) => {
+    const nextHour = hour + 1;
+    return `${hour}h-${nextHour}h`;
+  };
 
   return (
     <Card>
@@ -64,9 +87,9 @@ export function ActivityHeatmap({ data }: ActivityHeatmapProps) {
           {/* Header com horários */}
           <div className="flex items-center gap-2">
             <div className="w-12" />
-            {hours.map((hour) => (
-              <div key={hour} className="flex-1 text-center text-xs text-muted-foreground">
-                {hour}h
+            {timeBlocks.map((block, idx) => (
+              <div key={idx} className="flex-1 text-center text-xs text-muted-foreground">
+                {block.label}
               </div>
             ))}
           </div>
@@ -79,18 +102,29 @@ export function ActivityHeatmap({ data }: ActivityHeatmapProps) {
                   {dayData.day}
                 </div>
                 <div className="flex flex-1 gap-1">
-                  {dayData.hours
-                    .filter((h) => hours.includes(h.hour))
-                    .map((hourData) => (
+                  {timeBlocks.map((block, idx) => {
+                    // Soma respostas do intervalo (ex: 0-2h)
+                    const blockCount = dayData.hours
+                      .filter((h) => h.hour >= block.start && h.hour < block.end)
+                      .reduce((sum, h) => sum + h.count, 0);
+                    
+                    // Detalhes para tooltip
+                    const details = dayData.hours
+                      .filter((h) => h.hour >= block.start && h.hour < block.end)
+                      .map((h) => `${h.hour}h: ${h.count}`)
+                      .join(', ') || 'Sem respostas';
+                    
+                    return (
                       <div
-                        key={hourData.hour}
+                        key={idx}
                         className={cn(
-                          "flex-1 h-8 rounded transition-colors",
-                          getIntensityClass(hourData.count)
+                          "flex-1 h-8 rounded transition-colors cursor-help",
+                          getIntensityClass(blockCount)
                         )}
-                        title={`${dayData.day} ${hourData.hour}h: ${hourData.count} respostas`}
+                        title={`${dayData.day} ${block.start}h-${block.end}h\n${details}\nTotal: ${blockCount} resp.`}
                       />
-                    ))}
+                    );
+                  })}
                 </div>
                 <div className="w-16 text-right text-xs text-muted-foreground">
                   {dayData.hours.reduce((sum, h) => sum + h.count, 0)} resp.
@@ -112,9 +146,9 @@ export function ActivityHeatmap({ data }: ActivityHeatmapProps) {
               </div>
               <span>Mais</span>
             </div>
-            {bestDay && (
+            {bestMoment.count > 0 && (
               <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                <span>Melhor momento: {bestDay.day}, 14h-16h</span>
+                <span>Melhor momento: {bestMoment.day}, {formatHourRange(bestMoment.hour)}</span>
               </div>
             )}
           </div>

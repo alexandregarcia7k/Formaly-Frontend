@@ -95,7 +95,24 @@ export const createResponseSchema = (fields: Array<{ id: string; type: FieldType
         shape[field.id] = (fieldSchema as z.ZodString).min(1, `${field.label} é obrigatório`);
       }
     } else {
-      shape[field.id] = fieldSchema.nullable();
+      // Campos não obrigatórios: aceitar null, undefined ou string vazia
+      if (field.type === "checkbox") {
+        shape[field.id] = fieldSchema.optional().default([]);
+      } else if (field.type === "email") {
+        // Email não obrigatório: validar formato apenas se preenchido
+        shape[field.id] = z.string().optional().refine(
+          (val) => !val || val === "" || z.string().email().safeParse(val).success,
+          { message: "Email inválido" }
+        );
+      } else if (field.type === "phone") {
+        // Telefone não obrigatório: validar formato apenas se preenchido
+        shape[field.id] = z.string().optional().refine(
+          (val) => !val || val === "" || /^[\d\s\-\+\(\)]+$/.test(val),
+          { message: "Telefone inválido" }
+        );
+      } else {
+        shape[field.id] = fieldSchema.optional().or(z.literal(""));
+      }
     }
   });
 

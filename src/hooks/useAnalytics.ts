@@ -37,7 +37,11 @@ function useAnalyticsData<T>(
         if (!cancelled) setData(result);
       } catch (err) {
         if (!cancelled) {
-          setError(isAxiosError(err) ? err.message : "Erro ao carregar dados");
+          if (isAxiosError(err)) {
+            setError(err.response?.data?.message || err.message);
+          } else {
+            setError("Erro ao carregar dados");
+          }
         }
       } finally {
         if (!cancelled) setIsLoading(false);
@@ -49,7 +53,7 @@ function useAnalyticsData<T>(
     return () => {
       cancelled = true;
     };
-  }, [period, formId]);
+  }, [fetchFn, period, formId]);
 
   return { data, isLoading, error };
 }

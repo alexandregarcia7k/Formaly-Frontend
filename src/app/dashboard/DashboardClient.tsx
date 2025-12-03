@@ -159,15 +159,15 @@ export function DashboardClient() {
       </>
     ), [handleRowClick]);
 
-  // Mostrar erro se houver
-  if (statsError || responsesError || chartError || activitiesError) {
+  // Mostrar erro apenas se stats falhar (endpoint principal)
+  if (statsError) {
     return (
       <div className="@container/main space-y-6">
         <Card className="border-destructive">
           <CardHeader>
             <CardTitle className="text-destructive">Erro ao Carregar Dados</CardTitle>
             <CardDescription>
-              {statsError || responsesError || chartError}
+              {statsError}
             </CardDescription>
           </CardHeader>
           <CardContent>

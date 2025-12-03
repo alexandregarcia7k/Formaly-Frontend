@@ -169,7 +169,10 @@ export function FormBuilderContainer({
       name: field.name || field.label.toLowerCase().replace(/\s+/g, "_"),
       placeholder: field.placeholder,
       required: field.required,
-      config: field.config,
+      config: {
+        ...field.config,
+        ...(field.options && { options: field.options }),
+      },
     }));
 
     // Preparar dados

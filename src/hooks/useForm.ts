@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useMemo } from "react";
 import { FormsService } from "@/lib/services/forms.service";
 import type { FormResponse, UpdateFormDto } from "@/schemas/form.schema";
 import { toast } from "sonner";
@@ -80,5 +80,18 @@ export function useForm(id: string): UseFormReturn {
     }
   }, [id]);
 
-  return { form, isLoading, error, update, deleteForm, clone, refetch: fetchForm };
+  const memoizedReturn = useMemo<UseFormReturn>(
+    () => ({
+      form,
+      isLoading,
+      error,
+      update,
+      deleteForm,
+      clone,
+      refetch: fetchForm,
+    }),
+    [form, isLoading, error, update, deleteForm, clone, fetchForm]
+  );
+
+  return memoizedReturn;
 }

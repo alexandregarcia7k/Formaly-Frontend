@@ -13,7 +13,6 @@ import { useState } from "react";
 import { AuthService } from "@/lib/services/auth.service";
 import { signIn } from "next-auth/react";
 import { loginSchema, registerSchema } from "@/schemas";
-import { tokenManager } from "@/lib/token-manager";
 import type { AxiosError } from "axios";
 
 interface BackendError {
@@ -61,7 +60,10 @@ export default function LoginPage() {
         return;
       }
 
+      // Força atualização do token após login
+      const { tokenManager } = await import("@/lib/token-manager");
       await tokenManager.getToken(true);
+
       toast.success("Login realizado com sucesso!");
       window.location.href = "/dashboard";
     } catch {
@@ -107,7 +109,10 @@ export default function LoginPage() {
         return;
       }
 
+      // Força atualização do token após registro
+      const { tokenManager } = await import("@/lib/token-manager");
       await tokenManager.getToken(true);
+      
       window.location.href = "/dashboard";
     } catch (error) {
       const axiosError = error as AxiosError<BackendError>;

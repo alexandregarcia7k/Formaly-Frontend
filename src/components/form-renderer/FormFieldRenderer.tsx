@@ -201,12 +201,14 @@ export function FormFieldRenderer({
               />
             </SelectTrigger>
             <SelectContent>
-              {field.options?.map((option, idx) => (
-                <SelectItem key={idx} value={option}>
-                  {option}
-                </SelectItem>
-              )) || (
-                <SelectItem value="" disabled>
+              {field.options && field.options.length > 0 ? (
+                field.options.map((option, idx) => (
+                  <SelectItem key={idx} value={option}>
+                    {option}
+                  </SelectItem>
+                ))
+              ) : (
+                <SelectItem value="no-options" disabled>
                   Nenhuma opção disponível
                 </SelectItem>
               )}

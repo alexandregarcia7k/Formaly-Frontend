@@ -107,17 +107,17 @@ export type LocationDataResponse = z.infer<typeof locationDataResponseSchema>;
 // KPIs
 export const kpiMetricSchema = z.object({
   value: z.union([z.number(), z.string().min(1)]),
-  trend: z.number(),
-  isPositive: z.boolean(),
+  trend: z.number().optional(),
+  isPositive: z.boolean().optional(),
   description: z.string().optional(),
-}).strict();
+});
 
 export const kpisResponseSchema = z.object({
   growth: kpiMetricSchema,
   conversionRate: kpiMetricSchema,
   averageTime: kpiMetricSchema,
   engagement: kpiMetricSchema,
-}).strict();
+});
 
 export type KPIMetric = z.infer<typeof kpiMetricSchema>;
 export type KPIsResponse = z.infer<typeof kpisResponseSchema>;

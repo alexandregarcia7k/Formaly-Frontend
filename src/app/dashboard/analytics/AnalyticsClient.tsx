@@ -40,11 +40,8 @@ export function AnalyticsClient() {
   const { data: formRankingData, isLoading: isLoadingRanking, error: errorRanking } = useFormRanking(timeRange);
 
   const isLoading = isLoadingKPIs || isLoadingTemporal || isLoadingDevice || isLoadingBrowser;
-  const hasError = errorKPIs || errorTemporal || errorDevice || errorBrowser;
 
-  if (hasError) {
-    toast.error("Erro ao carregar dados de analytics");
-  }
+
 
   return (
     <div className="@container/main space-y-6">
@@ -70,48 +67,74 @@ export function AnalyticsClient() {
       </div>
 
       {/* KPIs */}
-      {kpisData && (
+      {isLoadingKPIs ? (
+        <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+          {Array.from({ length: 4 }).map((_, i) => (
+            <Card key={i}>
+              <CardHeader className="space-y-2">
+                <div className="h-4 w-24 bg-muted animate-pulse rounded" />
+                <div className="h-8 w-16 bg-muted animate-pulse rounded" />
+              </CardHeader>
+              <CardContent>
+                <div className="h-3 w-32 bg-muted animate-pulse rounded" />
+              </CardContent>
+            </Card>
+          ))}
+        </div>
+      ) : errorKPIs ? (
+        <Card>
+          <CardContent className="pt-6">
+            <p className="text-sm text-muted-foreground text-center">
+              Erro ao carregar KPIs. Verifique o console para mais detalhes.
+            </p>
+          </CardContent>
+        </Card>
+      ) : kpisData ? (
         <SectionCards
           stats={[
             {
               title: "Crescimento",
               value: kpisData.growth.value,
-              trend: {
+              trend: kpisData.growth.trend !== undefined ? {
                 value: `${kpisData.growth.trend > 0 ? '+' : ''}${kpisData.growth.trend}%`,
-                isPositive: kpisData.growth.isPositive,
-              },
+                isPositive: kpisData.growth.isPositive ?? true,
+              } : undefined,
               description: kpisData.growth.description || "Total de respostas",
               footer: "vs período anterior",
             },
             {
               title: "Taxa de Conversão",
               value: `${kpisData.conversionRate.value}%`,
-              trend: {
+              trend: kpisData.conversionRate.trend !== undefined ? {
                 value: `${kpisData.conversionRate.trend > 0 ? '+' : ''}${kpisData.conversionRate.trend}pp`,
-                isPositive: kpisData.conversionRate.isPositive,
-              },
+                isPositive: kpisData.conversionRate.isPositive ?? true,
+              } : undefined,
               description: kpisData.conversionRate.description || "Taxa de conclusão",
               footer: "vs período anterior",
             },
             {
               title: "Tempo Médio",
               value: kpisData.averageTime.value,
-              trend: {
+              trend: kpisData.averageTime.trend !== undefined ? {
                 value: `${kpisData.averageTime.trend}s`,
-                isPositive: kpisData.averageTime.isPositive,
-              },
+                isPositive: kpisData.averageTime.isPositive ?? true,
+              } : undefined,
               description: kpisData.averageTime.description || "Tempo de preenchimento",
               footer: "vs período anterior",
             },
             {
               title: "Engajamento",
               value: kpisData.engagement.value,
+              trend: kpisData.engagement.trend !== undefined ? {
+                value: `${kpisData.engagement.trend > 0 ? '+' : ''}${kpisData.engagement.trend}`,
+                isPositive: kpisData.engagement.isPositive ?? true,
+              } : undefined,
               description: kpisData.engagement.description || "Score de engajamento",
               footer: "Baseado em interações",
             },
           ]}
         />
-      )}
+      ) : null}
 
       {/* Temporal Chart */}
       <TemporalChart data={temporalData?.data || []} timeRange={timeRange} />

@@ -66,7 +66,7 @@ export const responsesOverTimeSchema = z.object({
  */
 export const activityItemSchema = z.object({
   id: z.string().uuid(),
-  type: z.enum(["form_created", "form_updated", "response_received", "form_deleted"]),
+  type: z.enum(["form_created", "form_updated", "response_received", "form_deleted", "form_status_changed"]),
   message: z.string(),
   createdAt: z.string(),
   formId: z.string().uuid(),

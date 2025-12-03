@@ -1,8 +1,8 @@
 "use client";
 
-import { useState, useCallback } from "react";
+import { useState, useEffect, useCallback, useMemo } from "react";
+import { isAxiosError } from "axios";
 import { DashboardService } from "@/lib/services/dashboard.service";
-import { useApiQuery } from "./useApiQuery";
 import type {
   DashboardStats,
   LatestResponses,
@@ -44,27 +44,70 @@ interface UseActivitiesReturn {
  * Hook para estatísticas do dashboard
  */
 export function useDashboardStats(): UseDashboardStatsReturn {
-  const { data: stats, isLoading, error, refetch } = useApiQuery({
-    queryFn: DashboardService.getStats,
-    defaultValue: null,
-    errorMessage: "Erro ao carregar estatísticas",
-  });
+  const [stats, setStats] = useState<DashboardStats | null>(null);
+  const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
 
-  return { stats, isLoading, error, refetch };
+  const fetchStats = useCallback(async () => {
+    try {
+      setError(null);
+      const result = await DashboardService.getStats();
+      setStats(result);
+    } catch (err) {
+      if (isAxiosError(err)) {
+        setError(err.response?.data?.message || err.message);
+      } else if (err instanceof Error) {
+        setError(err.message);
+      } else {
+        setError("Erro ao carregar estatísticas");
+      }
+      setStats(null);
+    } finally {
+      setIsLoading(false);
+    }
+  }, []);
+
+  useEffect(() => {
+    fetchStats();
+    const interval = setInterval(fetchStats, 5 * 60 * 1000);
+    return () => clearInterval(interval);
+  }, [fetchStats]);
+
+  return { stats, isLoading, error, refetch: fetchStats };
 }
 
 /**
  * Hook para últimas respostas
  */
 export function useLatestResponses(limit: number = 10): UseLatestResponsesReturn {
-  const queryFn = useCallback(() => DashboardService.getLatestResponses(limit), [limit]);
-  const { data: responses, isLoading, error, refetch } = useApiQuery({
-    queryFn,
-    defaultValue: [],
-    errorMessage: "Erro ao carregar respostas",
-  });
+  const [responses, setResponses] = useState<LatestResponses>([]);
+  const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
 
-  return { responses, isLoading, error, refetch };
+  const fetchResponses = useCallback(async () => {
+    try {
+      setError(null);
+      const result = await DashboardService.getLatestResponses(limit);
+      setResponses(result);
+    } catch (err) {
+      if (isAxiosError(err)) {
+        setError(err.response?.data?.message || err.message);
+      } else if (err instanceof Error) {
+        setError(err.message);
+      } else {
+        setError("Erro ao carregar respostas");
+      }
+      setResponses([]);
+    } finally {
+      setIsLoading(false);
+    }
+  }, [limit]);
+
+  useEffect(() => {
+    fetchResponses();
+  }, [fetchResponses]);
+
+  return { responses, isLoading, error, refetch: fetchResponses };
 }
 
 /**
@@ -72,30 +115,72 @@ export function useLatestResponses(limit: number = 10): UseLatestResponsesReturn
  */
 export function useResponsesOverTime(initialPeriod: Period = "30d"): UseResponsesOverTimeReturn {
   const [period, setPeriod] = useState<Period>(initialPeriod);
-  const queryFn = useCallback(() => DashboardService.getResponsesOverTime(period), [period]);
-  const { data, isLoading, error, refetch } = useApiQuery({
-    queryFn,
-    defaultValue: [],
-    errorMessage: "Erro ao carregar dados do gráfico",
-  });
+  const [data, setData] = useState<ResponsesOverTime>([]);
+  const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+
+  const fetchData = useCallback(async () => {
+    try {
+      setError(null);
+      const result = await DashboardService.getResponsesOverTime(period);
+      setData(result);
+    } catch (err) {
+      if (isAxiosError(err)) {
+        setError(err.response?.data?.message || err.message);
+      } else if (err instanceof Error) {
+        setError(err.message);
+      } else {
+        setError("Erro ao carregar dados do gráfico");
+      }
+      setData([]);
+    } finally {
+      setIsLoading(false);
+    }
+  }, [period]);
+
+  useEffect(() => {
+    fetchData();
+  }, [fetchData]);
 
   const changePeriod = useCallback((newPeriod: Period) => {
     setPeriod(newPeriod);
   }, []);
 
-  return { data, isLoading, error, changePeriod, refetch };
+  return { data, isLoading, error, changePeriod, refetch: fetchData };
 }
 
 /**
  * Hook para atividades recentes
  */
 export function useActivities(limit: number = 10): UseActivitiesReturn {
-  const queryFn = useCallback(() => DashboardService.getActivities(limit), [limit]);
-  const { data: activities, isLoading, error, refetch } = useApiQuery({
-    queryFn,
-    defaultValue: [],
-    errorMessage: "Erro ao carregar atividades",
-  });
+  const [activities, setActivities] = useState<Activities>([]);
+  const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
 
-  return { activities, isLoading, error, refetch };
+  const fetchActivities = useCallback(async () => {
+    try {
+      setError(null);
+      const result = await DashboardService.getActivities(limit);
+      setActivities(result);
+    } catch (err) {
+      if (isAxiosError(err)) {
+        setError(err.response?.data?.message || err.message);
+      } else if (err instanceof Error) {
+        setError(err.message);
+      } else {
+        setError("Erro ao carregar atividades");
+      }
+      setActivities([]);
+    } finally {
+      setIsLoading(false);
+    }
+  }, [limit]);
+
+  useEffect(() => {
+    fetchActivities();
+    const interval = setInterval(fetchActivities, 30 * 1000);
+    return () => clearInterval(interval);
+  }, [fetchActivities]);
+
+  return { activities, isLoading, error, refetch: fetchActivities };
 }

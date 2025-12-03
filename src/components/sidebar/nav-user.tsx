@@ -8,6 +8,7 @@ import {
   IconUserCircle,
 } from "@tabler/icons-react";
 import { signOut } from "next-auth/react";
+import { useRouter } from "next/navigation";
 
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import {
@@ -36,6 +37,7 @@ export function NavUser({
   };
 }) {
   const { isMobile } = useSidebar();
+  const router = useRouter();
 
   const handleLogout = async () => {
     await signOut({ callbackUrl: "/login" });
@@ -99,15 +101,15 @@ export function NavUser({
             </DropdownMenuLabel>
             <DropdownMenuSeparator />
             <DropdownMenuGroup>
-              <DropdownMenuItem>
+              <DropdownMenuItem onClick={() => router.push("/dashboard/settings?tab=account")}>
                 <IconUserCircle />
                 Minha Conta
               </DropdownMenuItem>
-              <DropdownMenuItem>
+              <DropdownMenuItem onClick={() => router.push("/dashboard/settings?tab=billing")}>
                 <IconCreditCard />
                 Planos e Pagamento
               </DropdownMenuItem>
-              <DropdownMenuItem>
+              <DropdownMenuItem onClick={() => router.push("/dashboard/settings?tab=notifications")}>
                 <IconNotification />
                 Notificações
               </DropdownMenuItem>

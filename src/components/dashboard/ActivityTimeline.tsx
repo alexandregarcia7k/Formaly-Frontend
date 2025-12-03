@@ -1,7 +1,7 @@
 "use client";
 
 import { useRouter } from "next/navigation";
-import { FileText, MessageSquare, Edit, Trash2 } from "lucide-react";
+import { FileText, MessageSquare, Edit, Trash2, ToggleLeft } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { formatDistanceToNow } from "date-fns";
 import { ptBR } from "date-fns/locale";
@@ -17,7 +17,8 @@ const activityIcons = {
   form_updated: Edit,
   response_received: MessageSquare,
   form_deleted: Trash2,
-};
+  form_status_changed: ToggleLeft,
+} as const;
 
 export function ActivityTimeline({ activities }: ActivityTimelineProps) {
   const router = useRouter();
@@ -30,6 +31,7 @@ export function ActivityTimeline({ activities }: ActivityTimelineProps) {
     switch (activity.type) {
       case 'form_created':
       case 'form_updated':
+      case 'form_status_changed':
         router.push(`/dashboard/forms/${formId}/edit`);
         break;
       case 'response_received':

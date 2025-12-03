@@ -21,6 +21,7 @@ export function NavSecondary({
     title: string;
     url: string;
     icon: Icon;
+    disabled?: boolean;
   }[];
 } & React.ComponentPropsWithoutRef<typeof SidebarGroup>) {
   const pathname = usePathname();
@@ -31,12 +32,19 @@ export function NavSecondary({
         <SidebarMenu>
           {items.map((item) => (
             <SidebarMenuItem key={item.title}>
-              <SidebarMenuButton asChild isActive={pathname === item.url}>
-                <Link href={item.url}>
+              {item.disabled ? (
+                <SidebarMenuButton disabled className="opacity-50 cursor-not-allowed">
                   <item.icon />
                   <span>{item.title}</span>
-                </Link>
-              </SidebarMenuButton>
+                </SidebarMenuButton>
+              ) : (
+                <SidebarMenuButton asChild isActive={pathname === item.url}>
+                  <Link href={item.url}>
+                    <item.icon />
+                    <span>{item.title}</span>
+                  </Link>
+                </SidebarMenuButton>
+              )}
             </SidebarMenuItem>
           ))}
         </SidebarMenu>

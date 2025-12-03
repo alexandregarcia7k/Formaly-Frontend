@@ -10,11 +10,14 @@ interface BrowserChartProps {
 }
 
 const BROWSER_COLORS: Record<string, string> = {
-  chrome: "hsl(var(--chart-1))",
-  safari: "hsl(var(--chart-2))",
-  firefox: "hsl(var(--chart-3))",
-  edge: "hsl(var(--chart-4))",
-  outros: "hsl(var(--chart-5))",
+  chrome: "hsl(142, 76%, 36%)",    // Verde (cor oficial Chrome)
+  safari: "hsl(221, 83%, 53%)",    // Azul royal (Safari)
+  firefox: "hsl(14, 100%, 53%)",   // Laranja vibrante (Firefox)
+  edge: "hsl(199, 89%, 48%)",      // Azul ciano (Edge)
+  opera: "hsl(0, 72%, 51%)",       // Vermelho (Opera)
+  brave: "hsl(33, 100%, 50%)",     // Laranja dourado (Brave)
+  unknown: "hsl(0, 0%, 60%)",      // Cinza
+  outros: "hsl(280, 65%, 60%)",    // Roxo
 };
 
 export function BrowserChart({ data }: BrowserChartProps) {
@@ -43,7 +46,7 @@ export function BrowserChart({ data }: BrowserChartProps) {
 
   const chartData = data.map((item) => ({
     ...item,
-    color: BROWSER_COLORS[item.name.toLowerCase()] || "hsl(var(--chart-5))",
+    color: BROWSER_COLORS[item.name.toLowerCase()] || "hsl(0, 0%, 60%)",
   }));
 
   const chartConfig = chartData.reduce((acc, item) => {

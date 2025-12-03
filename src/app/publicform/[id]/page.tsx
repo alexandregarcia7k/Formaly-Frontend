@@ -28,6 +28,7 @@ export default function PublicFormPage({ params }: PublicFormPageProps) {
   const [submissionData, setSubmissionData] = useState<Record<string, unknown>>({});
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isSubmitted, setIsSubmitted] = useState(false);
+  const [formStartedAt, setFormStartedAt] = useState<Date | null>(null);
 
   useEffect(() => {
     loadForm();
@@ -59,6 +60,11 @@ export default function PublicFormPage({ params }: PublicFormPageProps) {
       });
 
       setShowPasswordPrompt(response.requiresPassword);
+
+      // Registrar início do preenchimento (se não tiver senha)
+      if (!response.requiresPassword) {
+        setFormStartedAt(new Date());
+      }
     } catch {
       setError("Formulário não encontrado ou não está mais disponível.");
     } finally {
@@ -71,6 +77,8 @@ export default function PublicFormPage({ params }: PublicFormPageProps) {
       await PublicFormsService.validatePassword(id, password);
       setFormPassword(password);
       setShowPasswordPrompt(false);
+      // Registrar início após validação de senha
+      setFormStartedAt(new Date());
     } catch {
       throw new Error("Senha incorreta");
     }
@@ -97,9 +105,20 @@ export default function PublicFormPage({ params }: PublicFormPageProps) {
       }
     });
 
+    // Calcular metadata de tempo
+    const completedAt = new Date();
+    const timeSpent = formStartedAt 
+      ? Math.floor((completedAt.getTime() - formStartedAt.getTime()) / 1000)
+      : 0;
+
     const payload = {
       values: dataByName,
       ...(formPassword && { password: formPassword }),
+      metadata: {
+        startedAt: formStartedAt?.toISOString(),
+        completedAt: completedAt.toISOString(),
+        timeSpent,
+      },
     };
 
     try {

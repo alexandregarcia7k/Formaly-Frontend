@@ -36,74 +36,149 @@ function validatePeriod(period: Period): Period {
 }
 
 /**
- * Helper para validar resposta com schema Zod
- */
-function validateResponse<T>(schema: any, data: unknown): T {
-  const result = schema.safeParse(data);
-  if (!result.success) {
-    throw new Error(`Erro ao validar resposta: ${result.error.issues[0].message}`);
-  }
-  return result.data;
-}
-
-/**
  * Service para analytics do backend
  * Base URL: /api/analytics
+ * Todos os métodos validam input e output com Zod
  */
 export class AnalyticsService {
-  static async getTemporalData(period: Period = "30d", formId?: string): Promise<TemporalDataResponse> {
-    const { data } = await apiClient.get("/api/analytics/temporal", {
+  /**
+   * GET /api/analytics/temporal
+   * Visualizações e respostas ao longo do tempo
+   */
+  static async getTemporalData(
+    period: Period = "30d",
+    formId?: string
+  ): Promise<TemporalDataResponse> {
+    const response = await apiClient.get("/api/analytics/temporal", {
       params: { period: validatePeriod(period), ...(formId && { formId }) },
     });
-    return validateResponse(temporalDataResponseSchema, data);
+    const result = temporalDataResponseSchema.safeParse(response.data);
+    if (!result.success) {
+      throw new Error(`Erro ao validar resposta: ${result.error.issues[0].message}`);
+    }
+    return result.data;
   }
 
-  static async getDeviceData(period: Period = "30d", formId?: string): Promise<DeviceDataResponse> {
-    const { data } = await apiClient.get("/api/analytics/devices", {
+  /**
+   * GET /api/analytics/devices
+   * Percentual de acessos por tipo de dispositivo
+   */
+  static async getDeviceData(
+    period: Period = "30d",
+    formId?: string
+  ): Promise<DeviceDataResponse> {
+    const response = await apiClient.get("/api/analytics/devices", {
       params: { period: validatePeriod(period), ...(formId && { formId }) },
     });
-    return validateResponse(deviceDataResponseSchema, data);
+    const result = deviceDataResponseSchema.safeParse(response.data);
+    if (!result.success) {
+      throw new Error(`Erro ao validar resposta: ${result.error.issues[0].message}`);
+    }
+    return result.data;
   }
 
-  static async getBrowserData(period: Period = "30d", formId?: string): Promise<BrowserDataResponse> {
-    const { data } = await apiClient.get("/api/analytics/browsers", {
+  /**
+   * GET /api/analytics/browsers
+   * Percentual de acessos por navegador
+   */
+  static async getBrowserData(
+    period: Period = "30d",
+    formId?: string
+  ): Promise<BrowserDataResponse> {
+    const response = await apiClient.get("/api/analytics/browsers", {
       params: { period: validatePeriod(period), ...(formId && { formId }) },
     });
-    return validateResponse(browserDataResponseSchema, data);
+    const result = browserDataResponseSchema.safeParse(response.data);
+    if (!result.success) {
+      throw new Error(`Erro ao validar resposta: ${result.error.issues[0].message}`);
+    }
+    return result.data;
   }
 
-  static async getFunnelData(period: Period = "30d", formId?: string): Promise<FunnelDataResponse> {
-    const { data } = await apiClient.get("/api/analytics/funnel", {
+  /**
+   * GET /api/analytics/funnel
+   * Análise do funil de conversão em 3 etapas
+   */
+  static async getFunnelData(
+    period: Period = "30d",
+    formId?: string
+  ): Promise<FunnelDataResponse> {
+    const response = await apiClient.get("/api/analytics/funnel", {
       params: { period: validatePeriod(period), ...(formId && { formId }) },
     });
-    return validateResponse(funnelDataResponseSchema, data);
+    const result = funnelDataResponseSchema.safeParse(response.data);
+    if (!result.success) {
+      throw new Error(`Erro ao validar resposta: ${result.error.issues[0].message}`);
+    }
+    return result.data;
   }
 
-  static async getHeatmapData(period: Period = "30d", formId?: string): Promise<HeatmapDataResponse> {
-    const { data } = await apiClient.get("/api/analytics/heatmap", {
+  /**
+   * GET /api/analytics/heatmap
+   * Atividade por dia da semana e hora do dia
+   */
+  static async getHeatmapData(
+    period: Period = "30d",
+    formId?: string
+  ): Promise<HeatmapDataResponse> {
+    const response = await apiClient.get("/api/analytics/heatmap", {
       params: { period: validatePeriod(period), ...(formId && { formId }) },
     });
-    return validateResponse(heatmapDataResponseSchema, data);
+    const result = heatmapDataResponseSchema.safeParse(response.data);
+    if (!result.success) {
+      throw new Error(`Erro ao validar resposta: ${result.error.issues[0].message}`);
+    }
+    return result.data;
   }
 
-  static async getLocationData(period: Period = "30d", formId?: string): Promise<LocationDataResponse> {
-    const { data } = await apiClient.get("/api/analytics/location", {
+  /**
+   * GET /api/analytics/location
+   * Top 10 estados/países por número de respostas
+   */
+  static async getLocationData(
+    period: Period = "30d",
+    formId?: string
+  ): Promise<LocationDataResponse> {
+    const response = await apiClient.get("/api/analytics/location", {
       params: { period: validatePeriod(period), ...(formId && { formId }) },
     });
-    return validateResponse(locationDataResponseSchema, data);
+    const result = locationDataResponseSchema.safeParse(response.data);
+    if (!result.success) {
+      throw new Error(`Erro ao validar resposta: ${result.error.issues[0].message}`);
+    }
+    return result.data;
   }
 
-  static async getKPIs(period: Period = "30d", formId?: string): Promise<KPIsResponse> {
-    const { data } = await apiClient.get("/api/analytics/kpis", {
+  /**
+   * GET /api/analytics/kpis
+   * 4 indicadores principais com tendências
+   */
+  static async getKPIs(
+    period: Period = "30d",
+    formId?: string
+  ): Promise<KPIsResponse> {
+    const response = await apiClient.get("/api/analytics/kpis", {
       params: { period: validatePeriod(period), ...(formId && { formId }) },
     });
-    return validateResponse(kpisResponseSchema, data);
+    const result = kpisResponseSchema.safeParse(response.data);
+    if (!result.success) {
+      throw new Error(`Erro ao validar resposta: ${result.error.issues[0].message}`);
+    }
+    return result.data;
   }
 
+  /**
+   * GET /api/analytics/ranking
+   * Top 10 formulários ordenados por taxa de conversão
+   */
   static async getFormRanking(period: Period = "30d"): Promise<FormRankingResponse> {
-    const { data } = await apiClient.get("/api/analytics/ranking", {
+    const response = await apiClient.get("/api/analytics/ranking", {
       params: { period: validatePeriod(period) },
     });
-    return validateResponse(formRankingResponseSchema, data);
+    const result = formRankingResponseSchema.safeParse(response.data);
+    if (!result.success) {
+      throw new Error(`Erro ao validar resposta: ${result.error.issues[0].message}`);
+    }
+    return result.data;
   }
 }

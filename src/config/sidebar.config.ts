@@ -15,8 +15,6 @@ import {
   IconLayoutDashboard,
   IconForms,
   IconChartBar,
-  IconCloudDataConnection,
-  IconUsers,
   IconFileText,
   IconSettings,
   IconHelp,
@@ -41,7 +39,7 @@ export const mainLinks = [
     icon: IconLayoutDashboard,
   },
   {
-    title: "Criar formulários",
+    title: "Meus Formulários",
     url: "/dashboard/forms",
     icon: IconForms,
   },
@@ -55,11 +53,6 @@ export const mainLinks = [
     url: "/dashboard/analytics",
     icon: IconChartBar,
   },
-  {
-    title: "Integrações",
-    url: "/dashboard/integrations",
-    icon: IconCloudDataConnection,
-  },
 ];
 
 // ============================================
@@ -67,14 +60,10 @@ export const mainLinks = [
 // ============================================
 export const secondaryLinks = [
   {
-    title: "Team",
-    url: "/dashboard/team",
-    icon: IconUsers,
-  },
-  {
     title: "Templates",
     url: "/dashboard/templates",
     icon: IconFileText,
+    disabled: true,
   },
   {
     title: "Configurações",
@@ -95,6 +84,7 @@ export type SidebarLink = {
   title: string;
   url: string;
   icon: React.ComponentType<{ className?: string }>;
+  disabled?: boolean;
 };
 
 export type SidebarUser = {
